@@ -149,7 +149,6 @@
   function initHeroParallax() {
     if (reduce || window.innerWidth < 860) return;
     var content = document.querySelector('.hero-content');
-    var scrollHint = document.querySelector('.hero-scroll');
     if (!content) return;
     var raf = false;
     window.addEventListener('scroll', function () {
@@ -160,7 +159,6 @@
         if (y < window.innerHeight) {
           content.style.transform = 'translateY(' + (y * 0.16) + 'px)';
           content.style.opacity = String(Math.max(0, 1 - y / (window.innerHeight * 0.75)));
-          if (scrollHint) scrollHint.style.opacity = String(Math.max(0, 1 - y / 260));
         }
         raf = false;
       });

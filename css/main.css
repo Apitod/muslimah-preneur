@@ -307,25 +307,6 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
   to{opacity:1;transform:none}
 }
 
-.hero-scroll{
-  position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:9px;
-  opacity:0;animation:heroIn 1s var(--ease) 1.2s forwards;
-  pointer-events:none;
-}
-.hero-scroll span{
-  font-family:var(--body);font-size:.66rem;letter-spacing:.32em;
-  text-transform:uppercase;color:var(--olive);
-}
-.scroll-line{
-  width:1px;height:44px;background:linear-gradient(var(--wood-dark),transparent);
-  animation:scrollPulse 2.2s ease-in-out infinite;
-}
-@keyframes scrollPulse{
-  0%,100%{opacity:.35;transform:scaleY(.55);transform-origin:top}
-  50%{opacity:1;transform:scaleY(1);transform-origin:top}
-}
-
 /* ═══ TENTANG ═══ */
 #tentang{background:var(--cream)}
 .about-text{max-width:66ch;color:var(--olive);margin-bottom:20px}
