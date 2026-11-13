@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Form pendaftaran sponsor Muslimah Preneur Talk Show 25 Desember 2026.">
+<meta name="theme-color" content="#4A1521">
+<title>Daftar Sponsor — Muslimah Preneur</title>
+
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"></noscript>
+
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/form.css">
+</head>
+<body class="form-page">
+
+<!-- NAV -->
+<nav class="form-nav">
+  <a href="index.html" class="form-nav-back" aria-label="Kembali ke beranda">← Kembali</a>
+  <a href="index.html" class="nav-logo" aria-label="MQ Aaminah">
+    <img src="assets/logo.webp" alt="MQ Aaminah #temanngajimu" width="1000" height="267">
+  </a>
+  <span class="form-nav-title">Pendaftaran Sponsorship</span>
+</nav>
+
+<!-- HERO STRIP -->
+<div class="form-hero">
+  <div class="form-hero-content">
+    <p class="form-hero-orn" aria-hidden="true">✦ ✦ ✦</p>
+    <h1>Daftar Jadi Sponsor</h1>
+    <p>Muslimah Preneur Talk Show · Jum'at, 25 Desember 2026<br>Max Ballroom Hotel Maxone, Makassar</p>
+  </div>
+</div>
+
+<div class="form-wrap">
+
+  <!-- REKENING INFO -->
+  <div class="rek-box" role="region" aria-label="Informasi rekening pembayaran">
+    <div class="rek-box-top">Rekening Pembayaran</div>
+    <div class="rek-box-body">
+      <p class="rek-label">Bank BNI</p>
+      <p class="rek-value" id="rekNum">2137416261</p>
+      <p class="rek-name">a.n. Dian Purnamayanti</p>
+      <button class="rek-copy" id="copyRek" type="button">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Salin Nomor
+      </button>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <form id="sponsorForm" novalidate>
+
+    <!-- 01 PAKET -->
+    <div class="form-card">
+      <div class="card-header">
+        <span class="card-header-num">1</span>
+        Pilih Paket Sponsorship
+      </div>
+      <div class="card-body">
+        <div class="tier-picker" role="radiogroup" aria-label="Pilih paket sponsorship">
+          <label class="tier-opt" id="opt-plat" tabindex="0">
+            <input type="radio" name="paket" value="Platinum – IDR 5.000.000" required>
+            <span class="tier-opt-badge badge-plat">Platinum</span>
+            <p class="tier-opt-name">Platinum</p>
+            <p class="tier-opt-price">IDR 5.000.000</p>
+          </label>
+          <label class="tier-opt" id="opt-gold" tabindex="0">
+            <input type="radio" name="paket" value="Gold – IDR 3.000.000">
+            <span class="tier-opt-badge badge-gold">Gold</span>
+            <p class="tier-opt-name">Gold</p>
+            <p class="tier-opt-price">IDR 3.000.000</p>
+          </label>
+          <label class="tier-opt" id="opt-silv" tabindex="0">
+            <input type="radio" name="paket" value="Silver – IDR 2.500.000">
+            <span class="tier-opt-badge badge-silv">Silver</span>
+            <p class="tier-opt-name">Silver</p>
+            <p class="tier-opt-price">IDR 2.500.000</p>
+          </label>
+        </div>
+        <span class="field-error" id="paket-error" role="alert"></span>
+      </div>
+    </div>
+
+    <!-- 02 DATA PERUSAHAAN -->
+    <div class="form-card">
+      <div class="card-header">
+        <span class="card-header-num">2</span>
+        Data Perusahaan / Lembaga
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="nama_perusahaan">Nama Perusahaan / Lembaga <span aria-hidden="true">*</span></label>
+          <input type="text" id="nama_perusahaan" name="nama_perusahaan"
+            placeholder="PT. Contoh Usaha / Toko ABC"
+            autocomplete="organization" required>
+          <span class="field-error" id="nama_perusahaan-error" role="alert"></span>
+        </div>
+        <div class="field">
+          <label for="bidang_usaha">Bidang Usaha / Produk <span aria-hidden="true">*</span></label>
+          <input type="text" id="bidang_usaha" name="bidang_usaha"
+            placeholder="Fashion muslimah, kuliner, jasa digital, dll." required>
+          <span class="field-error" id="bidang_usaha-error" role="alert"></span>
+        </div>
+        <div class="field">
+          <label for="alamat">Alamat Perusahaan</label>
+          <textarea id="alamat" name="alamat" placeholder="Jl. ...&#10;(opsional)" autocomplete="street-address"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 DATA PIC -->
+    <div class="form-card">
+      <div class="card-header">
+        <span class="card-header-num">3</span>
+        Data Penanggung Jawab (PIC)
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="nama_pic">Nama Lengkap PIC <span aria-hidden="true">*</span></label>
+          <input type="text" id="nama_pic" name="nama_pic"
+            placeholder="Nama lengkap" autocomplete="name" required>
+          <span class="field-error" id="nama_pic-error" role="alert"></span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="jabatan">Jabatan</label>
+            <input type="text" id="jabatan" name="jabatan"
+              placeholder="Direktur / Manajer / Pemilik" autocomplete="organization-title">
+          </div>
+          <div class="field">
+            <label for="no_wa">No. WhatsApp <span aria-hidden="true">*</span></label>
+            <input type="tel" id="no_wa" name="no_wa"
+              placeholder="08xxxxxxxxxx" autocomplete="tel" required>
+            <span class="field-error" id="no_wa-error" role="alert"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email"
+            placeholder="email@contoh.com" autocomplete="email">
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 BUKTI TRANSFER -->
+    <div class="form-card">
+      <div class="card-header">
+        <span class="card-header-num">4</span>
+        Bukti Transfer
+      </div>
+      <div class="card-body">
+        <p style="font-size:.88rem;color:var(--olive);line-height:1.7;margin-bottom:4px">
+          Transfer sesuai paket ke rekening BNI <strong>2137416261</strong> a.n. Dian Purnamayanti,
+          lalu upload bukti di bawah ini.
+        </p>
+
+        <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload bukti transfer">
+          <input type="file" id="bukti_transfer" name="bukti_transfer"
+            accept="image/*,.pdf" aria-label="Pilih file bukti transfer">
+          <div class="upload-icon" aria-hidden="true">📎</div>
+          <div class="upload-label">
+            <strong>Klik atau seret file bukti transfer di sini</strong><br>
+            Format: JPG, PNG, PDF · Maks. 5 MB
+          </div>
+          <div class="upload-preview" id="uploadPreview">
+            <img id="previewImg" src="" alt="Preview bukti transfer">
+            <p class="upload-filename" id="uploadFilename"></p>
+            <p class="upload-change">Ganti file</p>
+          </div>
+        </div>
+        <span class="field-error" id="bukti_transfer-error" role="alert"></span>
+
+        <div class="field">
+          <label for="nama_transfer">Nama Pengirim Transfer <span aria-hidden="true">*</span></label>
+          <input type="text" id="nama_transfer" name="nama_transfer"
+            placeholder="Sesuai nama rekening pengirim" required>
+          <span class="field-error" id="nama_transfer-error" role="alert"></span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="jumlah_transfer">Jumlah Transfer (Rp) <span aria-hidden="true">*</span></label>
+            <input type="text" id="jumlah_transfer" name="jumlah_transfer"
+              placeholder="5.000.000" inputmode="numeric" required>
+            <span class="field-error" id="jumlah_transfer-error" role="alert"></span>
+          </div>
+          <div class="field">
+            <label for="tgl_transfer">Tanggal Transfer <span aria-hidden="true">*</span></label>
+            <input type="date" id="tgl_transfer" name="tgl_transfer" required>
+            <span class="field-error" id="tgl_transfer-error" role="alert"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 CATATAN -->
+    <div class="form-card">
+      <div class="card-header">
+        <span class="card-header-num">5</span>
+        Catatan Tambahan
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="catatan">Catatan / Permintaan Khusus</label>
+          <textarea id="catatan" name="catatan"
+            placeholder="Misal: posisi logo di banner, warna yang diinginkan, dll."></textarea>
+          <span class="field-hint">Opsional. Tim kami akan menghubungi Anda via WhatsApp untuk konfirmasi.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="form-submit">
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span>✓</span> Kirim Pendaftaran
+      </button>
+      <p class="submit-note">
+        Setelah mengirim, tim kami akan menghubungi Anda via WhatsApp dalam 1×24 jam.<br>
+        Butuh bantuan? Hubungi <strong>Khia</strong> (0853 9868 7711) atau <strong>Frista</strong> (0853 4372 3889)
+      </p>
+    </div>
+
+  </form>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen" role="status" aria-live="polite">
+    <div class="success-icon" aria-hidden="true">🌙</div>
+    <h2 class="success-title">Jazakumullahu Khairan!</h2>
+    <p class="success-text">
+      Pendaftaran sponsorship Anda telah kami terima.<br>
+      Tim kami akan menghubungi Anda via WhatsApp dalam 1×24 jam untuk konfirmasi dan detail lebih lanjut.<br><br>
+      <em>Baarakallahu fiikum — semoga Allah mudahkan setiap langkah kebaikan kita.</em>
+    </p>
+    <a href="#" class="success-wa" target="_blank" rel="noopener noreferrer">
+      💬 Chat Langsung via WhatsApp
+    </a>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<footer>
+  <img class="f-logo" src="assets/logo.webp" alt="MQ Aaminah" width="1000" height="267" loading="lazy">
+  <p class="f-brand">Muslimah Preneur · MQ Aaminah × Daarul Ilmil Karimi</p>
+  <p>Makassar, 2026</p>
+</footer>
+
+<script src="js/form.js" defer></script>
+</body>
+</html>
