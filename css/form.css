@@ -143,6 +143,12 @@ body.form-page{min-height:100vh;background:var(--cream);display:flex;flex-direct
 .badge-silv{background:var(--olive);color:var(--cream)}
 .tier-opt-name{font-family:var(--serif);font-size:1.03rem;color:var(--maroon);margin-bottom:4px}
 .tier-opt-price{font-size:.75rem;font-weight:600;color:var(--muted)}
+.tier-opt-ticket{
+  display:inline-block;margin-top:8px;
+  font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--maroon);background:rgba(86,88,44,.1);
+  border:1px solid rgba(86,88,44,.22);border-radius:999px;padding:2px 9px;
+}
 
 /* ── FIELDS ── */
 .field{display:flex;flex-direction:column;gap:6px}
