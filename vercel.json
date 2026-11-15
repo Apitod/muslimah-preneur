@@ -2,6 +2,10 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/undangan", "destination": "/registrasi", "permanent": true },
+    { "source": "/undangan.html", "destination": "/registrasi", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -10,6 +14,12 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/supabase-config.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
       ]
     },
     {

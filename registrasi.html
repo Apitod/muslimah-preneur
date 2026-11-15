@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Registrasi peserta Talk Show Muslimah Preneur — Jum'at 25 Desember 2026, Max Ballroom Hotel Maxone Makassar.">
+<meta name="theme-color" content="#4A1521">
+<meta property="og:title" content="Registrasi Peserta — Talk Show Muslimah Preneur">
+<meta property="og:description" content="Daftar kehadiran dan dapatkan tiket digital Muslimah Preneur.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/logo.webp">
+<title>Registrasi Peserta — Talk Show Muslimah Preneur</title>
+
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" as="image" href="assets/logo.webp">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/registrasi.css?v=20261117">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="reg-page">
+
+<header class="reg-header">
+  <a href="index.html" class="reg-back" aria-label="Kembali ke beranda">← Beranda</a>
+  <a href="index.html" class="reg-logo" aria-label="MQ Aaminah">
+    <img src="assets/logo.webp" alt="MQ Aaminah #temanngajimu" width="1000" height="267">
+  </a>
+  <span class="reg-header-title">Registrasi Peserta</span>
+</header>
+
+<section class="reg-hero">
+  <p class="chapter-label">Registrasi Peserta</p>
+  <h1 class="reg-title">Muslimah Preneur</h1>
+  <p class="tagline">Think Beyond, Empowering Self, Enriching Ummah</p>
+  <div class="reg-meta">
+    <span>Jum'at, 25 Desember 2026</span>
+    <span>Max Ballroom · Hotel Maxone Makassar</span>
+  </div>
+</section>
+
+<main class="chapter chapter-dark" id="registrasi">
+  <div class="wrap narrow">
+    <div class="center" id="daftarIntro">
+      <p class="chapter-label">Pendaftaran</p>
+      <h2 class="chapter-title">Daftar Kehadiran</h2>
+      <p class="lead">Isi data berikut untuk mendapatkan tiket digital Anda. Tiket dibuat otomatis dan dapat diunduh setelah pendaftaran tersimpan.</p>
+    </div>
+
+    <ul class="ticket-info" aria-label="Informasi tiket">
+      <li>
+        <span class="ticket-info-badge">Early Bird</span>
+        <strong>Rp 175.000</strong>
+        <span class="ticket-info-date">16 – 30 November 2026</span>
+        <span class="ticket-info-note">Khusus Muslimah DIK</span>
+      </li>
+      <li>
+        <span class="ticket-info-badge">Tiket Umum</span>
+        <strong>Rp 200.000</strong>
+        <span class="ticket-info-date">1 – 24 Desember 2026</span>
+        <span class="ticket-info-note">Umum</span>
+      </li>
+    </ul>
+
+    <p class="reg-help">Butuh bantuan pendaftaran? Hubungi <strong>Frista</strong> · <a href="https://wa.me/6285343723889" target="_blank" rel="noopener noreferrer">0853 4372 3889</a></p>
+
+    <form id="hadirForm" class="reg-form" novalidate>
+      <div class="form-card">
+        <div class="form-card-head">Data Peserta</div>
+        <div class="form-card-body">
+          <div class="field">
+            <label for="nama">Nama Lengkap <span aria-hidden="true">*</span></label>
+            <input type="text" id="nama" name="nama" placeholder="Nama lengkap Anda" autocomplete="name" required>
+            <span class="err" id="nama-error" role="alert"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="whatsapp">No. WhatsApp <span aria-hidden="true">*</span></label>
+              <input type="tel" id="whatsapp" name="whatsapp" placeholder="08xxxxxxxxxx" inputmode="tel" autocomplete="tel" required>
+              <span class="err" id="whatsapp-error" role="alert"></span>
+            </div>
+            <div class="field">
+              <label for="kategori">Kategori Peserta <span aria-hidden="true">*</span></label>
+              <select id="kategori" name="kategori" required>
+                <option value="">Pilih kategori</option>
+                <option value="Muslimah DIK">Muslimah DIK</option>
+                <option value="Umum">Umum</option>
+              </select>
+              <span class="err" id="kategori-error" role="alert"></span>
+            </div>
+          </div>
+
+          <div class="field" id="aminahField" hidden>
+            <input type="text" id="aminah_ke" name="aminah_ke" placeholder="Aaminah 1" aria-label="Aaminah">
+            <span class="err" id="aminah_ke-error" role="alert"></span>
+          </div>
+
+          <div class="field">
+            <label for="email">Email <span class="opt">(opsional)</span></label>
+            <input type="email" id="email" name="email" placeholder="email@contoh.com" autocomplete="email">
+            <span class="err" id="email-error" role="alert"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="nominal_transfer">Nominal Transfer <span aria-hidden="true">*</span></label>
+              <input type="text" id="nominal_transfer" name="nominal_transfer" placeholder="175.000" inputmode="numeric" required>
+              <span class="err" id="nominal_transfer-error" role="alert"></span>
+            </div>
+            <div class="field">
+              <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
+              <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
+            </div>
+          </div>
+          <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Mohon melampirkan struk dan bukti transfer berhasil.</p>
+
+          <p class="form-note">Data Anda disimpan untuk keperluan acara. Tiket dibuat setelah data tersimpan.</p>
+          <p class="form-status" id="formStatus" role="alert"></p>
+          <button type="submit" class="btn btn-gold btn-block" id="submitBtn">Daftar &amp; Buat Tiket</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="ticket-zone" id="ticketZone" aria-live="polite" hidden>
+      <div class="center">
+        <p class="chapter-label">Pendaftaran Berhasil</p>
+        <h2 class="chapter-title">Jazakumullahu Khairan!</h2>
+        <p class="lead">Tiket digital Anda sudah siap. Unduh dan simpan tiket di bawah ini.</p>
+      </div>
+      <div class="ticket-preview">
+        <img id="ticketImg" alt="Tiket peserta Muslimah Preneur">
+      </div>
+      <div class="ticket-actions">
+        <a id="downloadBtn" class="btn btn-gold" download>⤓ Download Tiket</a>
+      </div>
+      <button type="button" class="reset-link" id="resetBtn">Daftarkan peserta lain</button>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <img class="f-logo" src="assets/logo.webp" alt="MQ Aaminah" width="1000" height="267" loading="lazy">
+  <p class="f-brand">Muslimah Preneur <br> MQ Aaminah × Daarul Ilmil Karimi</p>
+  <p class="f-links">
+    <a href="index.html">Beranda</a> ·
+    <a href="pendaftaran.html">Sponsorship</a>
+  </p>
+  <p class="f-copy">© 2026 MQ Aaminah. Seluruh hak cipta dilindungi.</p>
+</footer>
+
+<div class="thanks-overlay" id="thanksOverlay" role="status" aria-live="polite" hidden>
+  <div class="thanks-card">
+    <div class="thanks-icon" aria-hidden="true">✓</div>
+    <p class="thanks-kicker">Pendaftaran Berhasil</p>
+    <h2 class="thanks-title">Terima kasih sudah mendaftar!</h2>
+    <p class="thanks-sub">Tiket digital Anda sedang disiapkan…</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="js/registrasi.js?v=20261118" defer></script>
+</body>
+</html>

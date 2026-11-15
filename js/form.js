@@ -32,6 +32,65 @@
     if (err)   err.classList.remove('show');
   }
 
+  function setStatus(el, message, type) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = 'form-status' + (message ? ' show ' + (type || 'error') : '');
+  }
+
+  function postRegistration(data) {
+    return fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        if (!res.ok || !body.ok) {
+          throw new Error(body.error || 'Pendaftaran gagal disimpan.');
+        }
+        return body;
+      });
+    });
+  }
+
+  function showThanks(overlay, done) {
+    if (!overlay) { done(); return; }
+    overlay.hidden = false;
+    requestAnimationFrame(function () { overlay.classList.add('show'); });
+    var short = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hold = short ? 450 : 1800;
+    var fade = short ? 40 : 350;
+    setTimeout(function () {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.hidden = true; done(); }, fade);
+    }, hold);
+  }
+
+  function getSupabase() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || !window.supabase) return null;
+    if (/YOUR-PROJECT/i.test(window.SUPABASE_URL) || /YOUR-ANON-KEY/i.test(window.SUPABASE_ANON_KEY)) return null;
+    if (!window.__sbClient) {
+      window.__sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    }
+    return window.__sbClient;
+  }
+
+  async function uploadAttachment(file, type) {
+    if (!file) return { path: '', name: '' };
+    var sb = getSupabase();
+    if (!sb) throw new Error('Upload lampiran belum dikonfigurasi.');
+    var res = await fetch('/api/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: type, filename: file.name, contentType: file.type })
+    });
+    var body = await res.json().catch(function () { return {}; });
+    if (!res.ok || !body.ok) throw new Error(body.error || 'Gagal menyiapkan upload lampiran.');
+    var up = await sb.storage.from('bukti-transfer').uploadToSignedUrl(body.path, body.token, file, { contentType: file.type });
+    if (up.error) throw new Error(up.error.message || 'Upload lampiran gagal.');
+    return { path: body.path, name: file.name };
+  }
+
   /* ── FORM CARDS ANIMATE IN ── */
   function animateCards() {
     if (!window.IntersectionObserver) {
@@ -163,41 +222,6 @@
   }
 
   /* ── BUILD WA MESSAGE ── */
-  function buildWA(data, invoiceNo) {
-    var lines = [
-      "Assalamu'alaikum, saya sudah mendaftar sebagai sponsor Talk Show Muslimah Preneur.",
-      '',
-      'No. Invoice: ' + invoiceNo,
-      'Perusahaan: ' + data.nama_perusahaan,
-      'Bidang: ' + data.bidang_usaha,
-      'Paket: ' + data.paket,
-      'Jumlah Transfer: Rp ' + formatRupiah(data.jumlah_transfer),
-      'PIC: ' + data.nama_pic,
-      'No. WhatsApp: ' + data.no_wa
-    ];
-    if (data.email) lines.push('Email: ' + data.email);
-    if (data.alamat) lines.push('Alamat: ' + data.alamat);
-    if (data.nama_transfer) lines.push('Nama Pengirim: ' + data.nama_transfer);
-    lines.push('', 'Mohon melampirkan struk dan bukti transfer berhasil.');
-    lines.push('', 'Terima kasih.');
-    return 'https://wa.me/6285398687711?text=' + encodeURIComponent(lines.join('\n'));
-  }
-
-  var invoiceFallback = 0;
-
-  function nextInvoiceNo() {
-    var n;
-    try {
-      var stored = parseInt(window.localStorage.getItem('mp_invoice_no') || '0', 10);
-      n = (isNaN(stored) ? 0 : stored) + 1;
-      window.localStorage.setItem('mp_invoice_no', String(n));
-    } catch (err) {
-      invoiceFallback += 1;
-      n = invoiceFallback;
-    }
-    return 'INV-' + String(n).padStart(3, '0');
-  }
-
   function todayID() {
     try {
       return new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -308,7 +332,7 @@
 
     ctx.fillStyle = 'rgba(235,214,183,.78)';
     ctx.font = 'italic 24px Lora, Georgia, serif';
-    ctx.fillText('Muslimah Preneur Talk Show', W / 2, M + 106);
+    ctx.fillText('Talk Show Muslimah Preneur', W / 2, M + 106);
 
     ctx.strokeStyle = 'rgba(235,214,183,.45)';
     ctx.lineWidth = 1;
@@ -406,7 +430,7 @@
     ctx.textAlign = 'center';
     ctx.fillStyle = '#6E6857';
     ctx.font = 'italic 21px Lora, Georgia, serif';
-    ctx.fillText('Mohon lampirkan struk dan bukti transfer berhasil saat konfirmasi via WhatsApp.', W / 2, y + 976);
+    ctx.fillText('Simpan invoice ini sebagai bukti pendaftaran sponsorship.', W / 2, y + 976);
 
     ctx.fillStyle = '#4A1521';
     ctx.fillRect(M, H - M - 104, W - M * 2, 104);
@@ -429,9 +453,8 @@
     var submitBtn = document.getElementById('submitBtn');
     var invoiceImg = document.getElementById('invoiceImg');
     var invoiceDownload = document.getElementById('invoiceDownload');
-    var waConfirm = document.getElementById('waConfirm');
-    var invoiceNote = document.getElementById('invoiceNote');
-    var defaultInvoiceNote = invoiceNote ? invoiceNote.textContent : '';
+    var formStatus = document.getElementById('formStatus');
+    var thanksOverlay = document.getElementById('thanksOverlay');
     if (!form) return;
 
     form.querySelectorAll('input, textarea, select').forEach(function (el) {
@@ -439,10 +462,11 @@
       el.addEventListener('change', function () { clearError(el.id); });
     });
 
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
       $$('.field-error').forEach(function (el) { el.classList.remove('show'); });
       $$('.field input,.field select,.field textarea').forEach(function (el) { el.classList.remove('error'); });
+      setStatus(formStatus, '', '');
 
       if (!validate()) {
         var firstErr = form.querySelector('.error, .field-error.show');
@@ -451,7 +475,10 @@
       }
 
       var paket = $('input[name="paket"]:checked');
+      var fileInput = document.getElementById('bukti_transfer');
+      var file = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
       var data = {
+        type: 'sponsor',
         paket: paket ? paket.value : '',
         nama_perusahaan: val('nama_perusahaan'),
         bidang_usaha: val('bidang_usaha'),
@@ -461,40 +488,48 @@
         no_wa: val('no_wa'),
         email: val('email'),
         nama_transfer: val('nama_transfer'),
-        jumlah_transfer: val('jumlah_transfer')
+        jumlah_transfer: val('jumlah_transfer'),
+        attachment_path: '',
+        attachment_name: ''
       };
-      var invoiceNo = nextInvoiceNo();
       var original = submitBtn.innerHTML;
 
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '⏳ Membuat invoice...';
+      submitBtn.innerHTML = 'Menyimpan pendaftaran...';
 
-      makeInvoice(data, invoiceNo).then(function (dataURL) {
+      try {
+        if (file) {
+          setStatus(formStatus, 'Mengunggah bukti transfer...', 'info');
+          var attachment = await uploadAttachment(file, 'sponsor');
+          data.attachment_path = attachment.path;
+          data.attachment_name = attachment.name;
+        }
+        setStatus(formStatus, 'Menyimpan data pendaftaran...', 'info');
+        var result = await postRegistration(data);
+        if (!result.invoiceNo) throw new Error('Nomor invoice tidak diterima dari server.');
+        var invoiceNo = String(result.invoiceNo);
+        var dataURL = await makeInvoice(data, invoiceNo);
+
         invoiceImg.src = dataURL;
         invoiceDownload.href = dataURL;
         invoiceDownload.setAttribute('download', 'Invoice-Sponsorship-' + invoiceNo + '.png');
-        waConfirm.href = buildWA(data, invoiceNo);
-        waConfirm.hidden = true;
-        if (invoiceNote) invoiceNote.textContent = defaultInvoiceNote;
-        form.style.display = 'none';
-        success.classList.add('show');
-        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setStatus(formStatus, '', '');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
-      }).catch(function (err) {
+        showThanks(thanksOverlay, function () {
+          form.style.display = 'none';
+          success.classList.add('show');
+          success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      } catch (err) {
         console.error(err);
-        alert('Maaf, invoice gagal dibuat. Silakan coba lagi.');
+        var msg = err && err.message ? err.message : 'Pendaftaran gagal disimpan. Silakan coba lagi.';
+        if (/fetch|network/i.test(msg)) msg = 'Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.';
+        setStatus(formStatus, msg, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
-      });
+      }
     });
-
-    if (invoiceDownload) {
-      invoiceDownload.addEventListener('click', function () {
-        if (waConfirm) waConfirm.hidden = false;
-        if (invoiceNote) invoiceNote.textContent = 'Invoice berhasil diunduh. Silakan konfirmasi via WhatsApp dan lampirkan struk serta bukti transfer berhasil.';
-      });
-    }
   }
 
   /* ── INIT ── */

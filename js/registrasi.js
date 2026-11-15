@@ -8,21 +8,63 @@
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function normalizePhone(v) { return v.replace(/[^\d]/g, ''); }
 
-  var fallbackSeq = 0;
-
-  function nextTicketNo() {
-    var n;
-    try {
-      var stored = parseInt(window.localStorage.getItem('mp_ticket_no') || '0', 10);
-      n = (isNaN(stored) ? 0 : stored) + 1;
-      if (n > 400) return null;
-      window.localStorage.setItem('mp_ticket_no', String(n));
-    } catch (err) {
-      fallbackSeq += 1;
-      if (fallbackSeq > 400) return null;
-      n = fallbackSeq;
+  function getSupabase() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || !window.supabase) return null;
+    if (/YOUR-PROJECT/i.test(window.SUPABASE_URL) || /YOUR-ANON-KEY/i.test(window.SUPABASE_ANON_KEY)) return null;
+    if (!window.__sbClient) {
+      window.__sbClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     }
-    return String(n).padStart(3, '0');
+    return window.__sbClient;
+  }
+
+  async function uploadAttachment(file, type) {
+    if (!file) return { path: '', name: '' };
+    var sb = getSupabase();
+    if (!sb) throw new Error('Upload lampiran belum dikonfigurasi.');
+    var res = await fetch('/api/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: type, filename: file.name, contentType: file.type })
+    });
+    var body = await res.json().catch(function () { return {}; });
+    if (!res.ok || !body.ok) throw new Error(body.error || 'Gagal menyiapkan upload lampiran.');
+    var up = await sb.storage.from('bukti-transfer').uploadToSignedUrl(body.path, body.token, file, { contentType: file.type });
+    if (up.error) throw new Error(up.error.message || 'Upload lampiran gagal.');
+    return { path: body.path, name: file.name };
+  }
+
+  function setStatus(el, message, type) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = 'form-status' + (message ? ' show ' + (type || 'error') : '');
+  }
+
+  function postRegistration(data) {
+    return fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        if (!res.ok || !body.ok) {
+          throw new Error(body.error || 'Pendaftaran gagal disimpan.');
+        }
+        return body;
+      });
+    });
+  }
+
+  function showThanks(overlay, done) {
+    if (!overlay) { done(); return; }
+    overlay.hidden = false;
+    requestAnimationFrame(function () { overlay.classList.add('show'); });
+    var short = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hold = short ? 450 : 1800;
+    var fade = short ? 40 : 350;
+    setTimeout(function () {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.hidden = true; done(); }, fade);
+    }, hold);
   }
 
   function initProgress() {
@@ -98,29 +140,12 @@
     if (!val('kategori')) {
       setErr('kategori', 'Pilih kategori peserta.'); ok = false;
     } else if (val('kategori') === 'Muslimah DIK' && !val('aminah_ke')) {
-      setErr('aminah_ke', 'Aminah ke berapa wajib diisi.'); ok = false;
+      setErr('aminah_ke', 'Aaminah wajib diisi.'); ok = false;
     }
     var email = val('email');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('email', 'Format email tidak valid.'); ok = false; }
+    if (!val('nominal_transfer')) { setErr('nominal_transfer', 'Nominal transfer wajib diisi.'); ok = false; }
     return ok;
-  }
-
-  function buildWA(data, code) {
-    var lines = [
-      "Assalamu'alaikum, saya sudah mendownload file tiket.",
-      '',
-      'Nomor Tiket: ' + code,
-      'Nama: ' + data.nama,
-      'Kategori: ' + data.kategori,
-      'No. WhatsApp: ' + data.whatsapp,
-      'Acara: Muslimah Preneur Talk Show — 25 Desember 2026'
-    ];
-    if (data.aminah) lines.push('Aminah Ke: ' + data.aminah);
-    if (data.email) lines.push('Email: ' + data.email);
-    if (data.instansi) lines.push('Asal/Instansi: ' + data.instansi);
-    if (data.domisili) lines.push('Domisili: ' + data.domisili);
-    lines.push('', 'Terima kasih.');
-    return 'https://wa.me/6285398687711?text=' + encodeURIComponent(lines.join('\n'));
   }
 
   function loadImg(src) {
@@ -220,18 +245,14 @@
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#EBD6B7';
-    ctx.font = '600 32px Lora, Georgia, serif';
-    ctx.fillText('TIKET PESERTA', W / 2, M + 66);
-
-    ctx.fillStyle = 'rgba(235,214,183,.78)';
-    ctx.font = 'italic 24px Lora, Georgia, serif';
-    ctx.fillText('Muslimah Preneur Talk Show', W / 2, M + 108);
+    ctx.font = '600 34px Lora, Georgia, serif';
+    ctx.fillText('TIKET PESERTA', W / 2, M + 82);
 
     ctx.strokeStyle = 'rgba(235,214,183,.45)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(W / 2 - 60, M + 136);
-    ctx.lineTo(W / 2 + 60, M + 136);
+    ctx.moveTo(W / 2 - 60, M + 130);
+    ctx.lineTo(W / 2 + 60, M + 130);
     ctx.stroke();
 
     ctx.fillStyle = '#EBD6B7';
@@ -268,18 +289,18 @@
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#6E6857';
-    ctx.font = '600 17px Lora, Georgia, serif';
+    ctx.font = '600 20px Lora, Georgia, serif';
     ctx.fillText('NO. TIKET', 140, y + 430);
     ctx.fillText('KATEGORI', 620, y + 430);
 
     ctx.fillStyle = '#4A1521';
-    ctx.font = '700 38px Lora, Georgia, serif';
-    ctx.fillText(code, 140, y + 478);
+    ctx.font = '700 50px Lora, Georgia, serif';
+    ctx.fillText(code, 140, y + 484);
 
     var kategoriDisplay = data.kategori + (data.aminah ? ' · ' + data.aminah : '');
-    fitFont(ctx, kategoriDisplay, 320, 30, '600 {s}px "Playfair Display", Georgia, serif', 18);
+    fitFont(ctx, kategoriDisplay, 360, 40, '600 {s}px "Playfair Display", Georgia, serif', 18);
     ctx.fillStyle = '#4A1521';
-    ctx.fillText(kategoriDisplay, 620, y + 476);
+    ctx.fillText(kategoriDisplay, 620, y + 482);
 
     dashedLine(ctx, W / 2 - 380, y + 526, W / 2 + 380, y + 526);
 
@@ -321,12 +342,11 @@
     var ticketZone = document.getElementById('ticketZone');
     var ticketImg = document.getElementById('ticketImg');
     var downloadBtn = document.getElementById('downloadBtn');
-    var waConfirm = document.getElementById('waConfirm');
     var submitBtn = document.getElementById('submitBtn');
+    var formStatus = document.getElementById('formStatus');
+    var thanksOverlay = document.getElementById('thanksOverlay');
     var resetBtn = document.getElementById('resetBtn');
     var daftarIntro = document.getElementById('daftarIntro');
-    var ticketNote = document.getElementById('ticketNote');
-    var defaultNote = ticketNote ? ticketNote.textContent : '';
     var kategoriEl = document.getElementById('kategori');
     var aminahField = document.getElementById('aminahField');
     var aminahInput = document.getElementById('aminah_ke');
@@ -351,9 +371,23 @@
       el.addEventListener('change', function () { clearErr(el.id); });
     });
 
-    form.addEventListener('submit', function (event) {
+    var buktiInput = document.getElementById('bukti_transfer');
+    if (buktiInput) {
+      buktiInput.addEventListener('change', function () {
+        var file = buktiInput.files && buktiInput.files[0];
+        if (file && file.size > 5 * 1024 * 1024) {
+          setStatus(formStatus, 'Ukuran bukti transfer maksimal 5 MB.', 'error');
+          buktiInput.value = '';
+        } else {
+          setStatus(formStatus, '', '');
+        }
+      });
+    }
+
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
       clearAll();
+      setStatus(formStatus, '', '');
 
       if (!validate()) {
         var first = $('.err.show', form);
@@ -361,66 +395,73 @@
         return;
       }
 
+      var fileInput = document.getElementById('bukti_transfer');
+      var file = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
       var data = {
+        type: 'peserta',
         nama: val('nama'),
         whatsapp: normalizePhone(val('whatsapp')),
         kategori: val('kategori'),
         aminah: val('aminah_ke'),
         email: val('email'),
-        instansi: val('instansi'),
-        domisili: val('domisili')
+        nominal_transfer: val('nominal_transfer'),
+        attachment_path: '',
+        attachment_name: ''
       };
-      var code = nextTicketNo();
-      if (!code) {
-        alert('Kuota tiket 400 sudah habis.');
-        return;
-      }
       var original = submitBtn.innerHTML;
 
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Membuat tiket...';
+      submitBtn.textContent = 'Menyimpan pendaftaran...';
 
-      makeTicket(data, code).then(function (dataURL) {
+      try {
+        if (file) {
+          setStatus(formStatus, 'Mengunggah bukti transfer...', 'info');
+          var attachment = await uploadAttachment(file, 'peserta');
+          data.attachment_path = attachment.path;
+          data.attachment_name = attachment.name;
+        }
+        setStatus(formStatus, 'Menyimpan data pendaftaran...', 'info');
+        var result = await postRegistration(data);
+        if (!result.ticketNo) throw new Error('Nomor tiket tidak diterima dari server.');
+        var ticketNo = String(result.ticketNo).padStart(3, '0');
+        var dataURL = await makeTicket(data, ticketNo);
+
         ticketImg.src = dataURL;
         downloadBtn.href = dataURL;
-        downloadBtn.setAttribute('download', 'Tiket-MuslimahPreneur-' + code + '.png');
-        waConfirm.href = buildWA(data, code);
-        waConfirm.hidden = true;
-        if (ticketNote) ticketNote.textContent = defaultNote;
-        if (daftarIntro) daftarIntro.hidden = true;
-        form.hidden = true;
-        ticketZone.hidden = false;
-        ticketZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        downloadBtn.setAttribute('download', 'Tiket-MuslimahPreneur-' + ticketNo + '.png');
+        setStatus(formStatus, '', '');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
-      }).catch(function (err) {
+        showThanks(thanksOverlay, function () {
+          if (daftarIntro) daftarIntro.hidden = true;
+          form.hidden = true;
+          ticketZone.hidden = false;
+          ticketZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      } catch (err) {
         console.error(err);
-        alert('Maaf, tiket gagal dibuat. Silakan coba lagi.');
+        var msg = err && err.message ? err.message : 'Pendaftaran gagal disimpan. Silakan coba lagi.';
+        if (/fetch|network/i.test(msg)) msg = 'Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.';
+        setStatus(formStatus, msg, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
-      });
+      }
     });
-
-    if (downloadBtn) {
-      downloadBtn.addEventListener('click', function () {
-        if (waConfirm) waConfirm.hidden = false;
-        if (ticketNote) ticketNote.textContent = 'Tiket berhasil diunduh. Silakan konfirmasi kehadiran Anda via WhatsApp.';
-      });
-    }
 
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
         form.reset();
         clearAll();
         toggleAminah();
+        setStatus(formStatus, '', '');
+        if (thanksOverlay) { thanksOverlay.hidden = true; thanksOverlay.classList.remove('show'); }
         ticketImg.removeAttribute('src');
         ticketZone.hidden = true;
         form.hidden = false;
         submitBtn.disabled = false;
-        if (waConfirm) waConfirm.hidden = true;
-        if (ticketNote) ticketNote.textContent = defaultNote;
         if (daftarIntro) daftarIntro.hidden = false;
-        document.getElementById('daftar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var section = document.getElementById('registrasi');
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   }

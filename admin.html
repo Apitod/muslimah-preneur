@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#4A1521">
+<title>Dashboard Admin — Talk Show Muslimah Preneur</title>
+
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css?v=20261117">
+</head>
+<body>
+
+<header class="admin-header">
+  <a href="index.html" class="admin-brand">
+    <img src="assets/logo.webp" alt="MQ Aaminah" width="1000" height="267">
+  </a>
+  <div class="admin-header-right">
+    <span class="admin-title">Dashboard Admin</span>
+    <span class="admin-email" id="adminEmail"></span>
+    <button type="button" class="btn-logout" id="logoutBtn" hidden>Keluar</button>
+  </div>
+</header>
+
+<main class="admin-main">
+
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <p class="kicker">Admin Panel</p>
+      <h1>Masuk Dashboard</h1>
+      <p class="login-sub">Gunakan akun admin yang sudah terdaftar di Supabase.</p>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+        </div>
+        <p class="form-status" id="loginStatus" role="alert"></p>
+        <button type="submit" class="btn-primary" id="loginBtn">Masuk</button>
+      </form>
+      <p class="login-note">Belum punya akses? Hubungi pengelola acara.</p>
+    </div>
+  </section>
+
+  <section class="admin-dashboard" id="dashboard" hidden>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Peserta</span>
+        <b id="statPeserta">0</b>
+      </div>
+      <div class="summary-card">
+        <span>Sponsor</span>
+        <b id="statSponsor">0</b>
+      </div>
+      <div class="summary-card">
+        <span>Total Nominal Peserta</span>
+        <b id="statNominalPeserta">Rp 0</b>
+      </div>
+      <div class="summary-card">
+        <span>Total Nominal Sponsor</span>
+        <b id="statNominalSponsor">Rp 0</b>
+      </div>
+    </div>
+
+    <div class="admin-toolbar">
+      <input type="search" id="searchInput" placeholder="Cari nama, WhatsApp, kode, perusahaan...">
+      <button type="button" class="btn-ghost" id="refreshBtn">Muat ulang</button>
+    </div>
+
+    <p class="form-status" id="dashStatus" role="alert"></p>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <h2>Peserta</h2>
+        <span class="count-pill" id="countPeserta">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No. Tiket</th>
+              <th>Nama</th>
+              <th>WhatsApp</th>
+              <th>Kategori</th>
+              <th>Aaminah</th>
+              <th>Nominal</th>
+              <th>Bukti</th>
+              <th>Tanggal</th>
+            </tr>
+          </thead>
+          <tbody id="pesertaBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="pesertaEmpty" hidden>Tidak ada data peserta.</p>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <h2>Sponsor</h2>
+        <span class="count-pill" id="countSponsor">0</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No. Invoice</th>
+              <th>Perusahaan</th>
+              <th>PIC</th>
+              <th>WhatsApp</th>
+              <th>Paket</th>
+              <th>Nominal</th>
+              <th>Bukti</th>
+              <th>Tanggal</th>
+            </tr>
+          </thead>
+          <tbody id="sponsorBody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="sponsorEmpty" hidden>Tidak ada data sponsor.</p>
+    </section>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="js/admin.js?v=20261117" defer></script>
+</body>
+</html>
