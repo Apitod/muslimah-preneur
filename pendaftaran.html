@@ -15,8 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"></noscript>
 
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/form.css">
+<link rel="stylesheet" href="css/main.css?v=20261115">
+<link rel="stylesheet" href="css/form.css?v=20261115">
 </head>
 <body class="form-page">
 
@@ -101,14 +101,14 @@
         <div class="field">
           <label for="nama_perusahaan">Nama Perusahaan / Lembaga <span aria-hidden="true">*</span></label>
           <input type="text" id="nama_perusahaan" name="nama_perusahaan"
-            placeholder="PT. Contoh Usaha / Toko ABC"
+            placeholder="PT. Contoh Usaha"
             autocomplete="organization" required>
           <span class="field-error" id="nama_perusahaan-error" role="alert"></span>
         </div>
         <div class="field">
           <label for="bidang_usaha">Bidang Usaha / Produk <span aria-hidden="true">*</span></label>
           <input type="text" id="bidang_usaha" name="bidang_usaha"
-            placeholder="Fashion muslimah, kuliner, jasa digital, dll." required>
+            placeholder="Fashion muslimah, jasa digital, dll." required>
           <span class="field-error" id="bidang_usaha-error" role="alert"></span>
         </div>
         <div class="field">
@@ -179,6 +179,7 @@
           </div>
         </div>
         <span class="field-error" id="bukti_transfer-error" role="alert"></span>
+        <p class="field-hint">Opsional — bukti transfer juga dapat dilampirkan via WhatsApp setelah invoice diunduh.</p>
 
         <div class="field">
           <label for="nama_transfer">Nama Pengirim Transfer <span aria-hidden="true">*</span></label>
@@ -193,27 +194,6 @@
               placeholder="5.000.000" inputmode="numeric" required>
             <span class="field-error" id="jumlah_transfer-error" role="alert"></span>
           </div>
-          <div class="field">
-            <label for="tgl_transfer">Tanggal Transfer <span aria-hidden="true">*</span></label>
-            <input type="date" id="tgl_transfer" name="tgl_transfer" required>
-            <span class="field-error" id="tgl_transfer-error" role="alert"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 05 CATATAN -->
-    <div class="form-card">
-      <div class="card-header">
-        <span class="card-header-num">5</span>
-        Catatan Tambahan
-      </div>
-      <div class="card-body">
-        <div class="field">
-          <label for="catatan">Catatan / Permintaan Khusus</label>
-          <textarea id="catatan" name="catatan"
-            placeholder="Misal: posisi logo di banner, warna yang diinginkan, dll."></textarea>
-          <span class="field-hint">Opsional. Tim kami akan menghubungi Anda via WhatsApp untuk konfirmasi.</span>
         </div>
       </div>
     </div>
@@ -237,12 +217,20 @@
     <h2 class="success-title">Jazakumullahu Khairan!</h2>
     <p class="success-text">
       Pendaftaran sponsorship Anda telah kami terima.<br>
+      Invoice berhasil dibuat. Unduh invoice di bawah ini sebagai bukti pendaftaran.
+    </p>
+    <div class="invoice-preview">
+      <img id="invoiceImg" alt="Invoice sponsorship Muslimah Preneur">
+    </div>
+    <div class="invoice-actions">
+      <a id="invoiceDownload" class="btn-invoice" download>⤓ Download Invoice</a>
+      <a id="waConfirm" class="success-wa" href="#" target="_blank" rel="noopener noreferrer" hidden>💬 Konfirmasi via WhatsApp</a>
+    </div>
+    <p class="invoice-note" id="invoiceNote">Setelah invoice diunduh, tombol WhatsApp akan muncul. Mohon lampirkan struk dan bukti transfer berhasil saat mengirim pesan.</p>
+    <p class="success-text">
       Tim kami akan menghubungi Anda via WhatsApp dalam 1×24 jam untuk konfirmasi dan detail lebih lanjut.<br><br>
       <em>Baarakallahu fiikum — semoga Allah mudahkan setiap langkah kebaikan kita.</em>
     </p>
-    <a href="#" class="success-wa" target="_blank" rel="noopener noreferrer">
-      💬 Chat Langsung via WhatsApp
-    </a>
   </div>
 
 </div><!-- /form-wrap -->
@@ -253,6 +241,6 @@
   <p>Makassar, 2026</p>
 </footer>
 
-<script src="js/form.js" defer></script>
+<script src="js/form.js?v=20261115" defer></script>
 </body>
 </html>

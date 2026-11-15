@@ -186,6 +186,13 @@ ul,ol{list-style:none}
 .chapter-dark .chapter-title em{color:var(--wood)}
 .lead{max-width:60ch;margin-top:20px;font-size:1rem;line-height:1.85;color:var(--olive)}
 .lead strong,.copy strong,.speaker-copy strong{color:var(--maroon)}
+.lead,.copy p,.venue-copy p,.venue-list li,.timeline .t-text,
+.speaker-copy p:not(.speaker-role):not(.speaker-quote):not(.slogan){
+  text-align:justify;
+  text-justify:inter-word;
+  hyphens:auto;
+}
+.ticket-zone .lead{text-align:center}
 .chapter-dark .lead strong,.chapter-dark .speaker-copy strong{color:var(--wood)}
 .bismillah{
   font-family:var(--serif);font-style:italic;
@@ -226,7 +233,7 @@ ul,ol{list-style:none}
   font-family:var(--serif);font-style:italic;font-size:clamp(1rem,2.2vw,1.16rem);
   color:var(--wood);margin-top:24px;padding-left:18px;border-left:2px solid rgba(235,214,183,.5);
 }
-.ig-link{display:inline-flex;margin-top:22px;font-size:.78rem;letter-spacing:.09em;color:var(--wood);border-bottom:1px solid rgba(235,214,183,.5);padding-bottom:2px;transition:color var(--t-fast),border-color var(--t-fast)}
+.ig-link{display:inline-flex;margin-top:22px;font-size:1rem;font-weight:600;letter-spacing:.04em;color:var(--wood);border-bottom:1px solid rgba(235,214,183,.5);padding-bottom:2px;transition:color var(--t-fast),border-color var(--t-fast)}
 .ig-link:hover{color:var(--cream);border-color:var(--cream)}
 
 .detail-head{max-width:640px;margin-bottom:36px}
@@ -299,6 +306,7 @@ ul,ol{list-style:none}
 .btn-wa{background:#1d7a45;color:#fff;box-shadow:0 8px 22px rgba(29,122,69,.22)}
 .btn-wa:hover{background:#166138;transform:translateY(-2px)}
 .btn-block{width:100%;margin-top:6px}
+.btn-pill{border-radius:999px}
 .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
 .ticket-zone{margin-top:34px;animation:fadeUp .7s var(--ease) both}
@@ -311,6 +319,13 @@ ul,ol{list-style:none}
 .ticket-note{text-align:center;margin-top:22px;font-size:.82rem;color:rgba(239,237,227,.6)}
 .reset-link{display:block;margin:18px auto 0;font-size:.76rem;letter-spacing:.06em;color:var(--wood-dark);border-bottom:1px solid rgba(235,214,183,.4);padding-bottom:2px;transition:color var(--t-fast),border-color var(--t-fast)}
 .reset-link:hover{color:var(--cream);border-color:var(--cream)}
+
+.sponsor-cta{
+  margin-top:46px;padding-top:32px;
+  border-top:1px solid rgba(235,214,183,.18);
+  text-align:center;
+}
+.sponsor-cta p{font-size:.9rem;color:rgba(239,237,227,.68);margin-bottom:18px}
 
 .site-footer{
   background:var(--maroon-deep);border-top:1px solid rgba(235,214,183,.12);

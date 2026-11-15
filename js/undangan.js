@@ -8,6 +8,23 @@
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function normalizePhone(v) { return v.replace(/[^\d]/g, ''); }
 
+  var fallbackSeq = 0;
+
+  function nextTicketNo() {
+    var n;
+    try {
+      var stored = parseInt(window.localStorage.getItem('mp_ticket_no') || '0', 10);
+      n = (isNaN(stored) ? 0 : stored) + 1;
+      if (n > 400) return null;
+      window.localStorage.setItem('mp_ticket_no', String(n));
+    } catch (err) {
+      fallbackSeq += 1;
+      if (fallbackSeq > 400) return null;
+      n = fallbackSeq;
+    }
+    return String(n).padStart(3, '0');
+  }
+
   function initProgress() {
     var bar = document.getElementById('progressBar');
     if (!bar) return;
@@ -78,17 +95,14 @@
     if (val('nama').length < 2) { setErr('nama', 'Nama lengkap wajib diisi.'); ok = false; }
     var phone = normalizePhone(val('whatsapp'));
     if (!/^[0-9]{9,15}$/.test(phone)) { setErr('whatsapp', 'Nomor WhatsApp tidak valid.'); ok = false; }
-    if (!val('kategori')) { setErr('kategori', 'Pilih kategori peserta.'); ok = false; }
+    if (!val('kategori')) {
+      setErr('kategori', 'Pilih kategori peserta.'); ok = false;
+    } else if (val('kategori') === 'Muslimah DIK' && !val('aminah_ke')) {
+      setErr('aminah_ke', 'Aminah ke berapa wajib diisi.'); ok = false;
+    }
     var email = val('email');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('email', 'Format email tidak valid.'); ok = false; }
     return ok;
-  }
-
-  function makeCode() {
-    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    var out = '';
-    for (var i = 0; i < 6; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
-    return 'MP-' + out;
   }
 
   function buildWA(data, code) {
@@ -101,6 +115,7 @@
       'No. WhatsApp: ' + data.whatsapp,
       'Acara: Muslimah Preneur Talk Show — 25 Desember 2026'
     ];
+    if (data.aminah) lines.push('Aminah Ke: ' + data.aminah);
     if (data.email) lines.push('Email: ' + data.email);
     if (data.instansi) lines.push('Asal/Instansi: ' + data.instansi);
     if (data.domisili) lines.push('Domisili: ' + data.domisili);
@@ -254,16 +269,17 @@
     ctx.textAlign = 'left';
     ctx.fillStyle = '#6E6857';
     ctx.font = '600 17px Lora, Georgia, serif';
-    ctx.fillText('KODE TIKET', 140, y + 430);
+    ctx.fillText('NO. TIKET', 140, y + 430);
     ctx.fillText('KATEGORI', 620, y + 430);
 
     ctx.fillStyle = '#4A1521';
     ctx.font = '700 38px Lora, Georgia, serif';
     ctx.fillText(code, 140, y + 478);
 
-    fitFont(ctx, data.kategori, 320, 30, '600 {s}px "Playfair Display", Georgia, serif', 18);
+    var kategoriDisplay = data.kategori + (data.aminah ? ' · ' + data.aminah : '');
+    fitFont(ctx, kategoriDisplay, 320, 30, '600 {s}px "Playfair Display", Georgia, serif', 18);
     ctx.fillStyle = '#4A1521';
-    ctx.fillText(data.kategori, 620, y + 476);
+    ctx.fillText(kategoriDisplay, 620, y + 476);
 
     dashedLine(ctx, W / 2 - 380, y + 526, W / 2 + 380, y + 526);
 
@@ -311,6 +327,24 @@
     var daftarIntro = document.getElementById('daftarIntro');
     var ticketNote = document.getElementById('ticketNote');
     var defaultNote = ticketNote ? ticketNote.textContent : '';
+    var kategoriEl = document.getElementById('kategori');
+    var aminahField = document.getElementById('aminahField');
+    var aminahInput = document.getElementById('aminah_ke');
+
+    function toggleAminah() {
+      if (!aminahField) return;
+      var show = !!(kategoriEl && kategoriEl.value === 'Muslimah DIK');
+      aminahField.hidden = !show;
+      if (!show) {
+        if (aminahInput) aminahInput.value = '';
+        clearErr('aminah_ke');
+      }
+    }
+
+    if (kategoriEl) {
+      kategoriEl.addEventListener('change', toggleAminah);
+      toggleAminah();
+    }
 
     $$('input, select', form).forEach(function (el) {
       el.addEventListener('input', function () { clearErr(el.id); });
@@ -331,11 +365,16 @@
         nama: val('nama'),
         whatsapp: normalizePhone(val('whatsapp')),
         kategori: val('kategori'),
+        aminah: val('aminah_ke'),
         email: val('email'),
         instansi: val('instansi'),
         domisili: val('domisili')
       };
-      var code = makeCode();
+      var code = nextTicketNo();
+      if (!code) {
+        alert('Kuota tiket 400 sudah habis.');
+        return;
+      }
       var original = submitBtn.innerHTML;
 
       submitBtn.disabled = true;
@@ -373,6 +412,7 @@
       resetBtn.addEventListener('click', function () {
         form.reset();
         clearAll();
+        toggleAminah();
         ticketImg.removeAttribute('src');
         ticketZone.hidden = true;
         form.hidden = false;

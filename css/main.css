@@ -60,6 +60,13 @@ ul{list-style:none}
 
 .container{max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
 
+.about-text,.about-quote,.goal-text,.rundown-text,.lokasi-item span,
+.suasana-cap p,.speaker-bio,.sponsor-intro,.budget-note,.cta-sub{
+  text-align:justify;
+  text-justify:inter-word;
+  hyphens:auto;
+}
+
 /* ═══ PROGRESS BAR ═══ */
 #progress-bar{
   position:fixed;top:0;left:0;height:3px;width:0;z-index:1000;
@@ -302,6 +309,11 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .btn-primary:hover{background:var(--maroon-deep);transform:translateY(-2px);box-shadow:0 14px 32px rgba(74,21,33,.28)}
 .btn-outline{border:1.5px solid var(--maroon);color:var(--maroon);background:transparent}
 .btn-outline:hover{background:var(--maroon);color:var(--cream);transform:translateY(-2px)}
+.hero-cta .btn-primary{background:var(--brown);box-shadow:0 8px 22px rgba(110,70,57,.24)}
+.hero-cta .btn-primary:hover{background:#5B392E;box-shadow:0 14px 32px rgba(110,70,57,.3)}
+.hero-cta .btn-outline{border-color:var(--brown);color:var(--brown)}
+.hero-cta .btn-outline:hover{background:var(--brown);color:var(--cream)}
+.btn-pill{border-radius:999px}
 
 @keyframes heroIn{
   from{opacity:0;transform:translateY(30px)}
@@ -521,7 +533,7 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 }
 .speaker-ig{
   display:inline-flex;align-items:center;gap:7px;
-  margin-top:20px;font-size:.78rem;letter-spacing:.09em;
+  margin-top:20px;font-size:1rem;font-weight:600;letter-spacing:.04em;
   color:var(--maroon);
   border-bottom:1px solid var(--wood-dark);
   padding-bottom:2px;
@@ -700,6 +712,7 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .btn-register:hover{background:var(--cream);transform:translateY(-2px);box-shadow:0 16px 38px rgba(235,214,183,.28)}
 .btn-wa{border:1px solid rgba(235,214,183,.42);color:var(--cream)}
 .btn-wa:hover{background:rgba(235,214,183,.13);border-color:var(--wood);transform:translateY(-2px)}
+.btn-register.btn-pill,.btn-wa.btn-pill{border-radius:999px}
 
 .contact-grid{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
