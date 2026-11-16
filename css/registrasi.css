@@ -558,9 +558,10 @@ ul,ol{list-style:none}
   100%{transform:scale(1);opacity:1}
 }
 
-.field input:disabled{
+.field input:disabled,
+.field select:disabled{
   background:var(--cream-2);
-  color:var(--muted);
+  color:#1A1A1A;
   cursor:not-allowed;
   opacity:1;
 }
@@ -580,21 +581,21 @@ ul,ol{list-style:none}
 .pay-info-top{
   background:var(--wood);padding:9px 18px;
   font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--maroon-deep);font-weight:600;
+  color:#1A1A1A;font-weight:600;
 }
 .pay-info-body{padding:16px 18px}
 .pay-info-bank{
   font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:4px;
+  color:#1A1A1A;margin-bottom:4px;
 }
 .pay-info-number{
-  font-family:var(--serif);font-size:1.3rem;color:var(--maroon);
+  font-family:var(--serif);font-size:1.3rem;color:#1A1A1A;
   letter-spacing:.04em;
 }
-.pay-info-name{font-size:.82rem;color:var(--olive);margin-top:3px}
+.pay-info-name{font-size:.82rem;color:#1A1A1A;margin-top:3px}
 .pay-copy{
   display:inline-flex;align-items:center;gap:6px;margin-top:9px;
-  font-size:.72rem;font-weight:600;color:var(--brown);
+  font-size:.72rem;font-weight:600;color:#1A1A1A;
   padding:3px 0;transition:opacity .2s,color .2s;
 }
-.pay-copy:hover{opacity:.7;color:var(--maroon)}
+.pay-copy:hover{opacity:.7;color:#000}
