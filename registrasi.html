@@ -107,21 +107,26 @@
             <span class="err" id="email-error" role="alert"></span>
           </div>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="no_rekening">Nomor Rekening <span aria-hidden="true">*</span></label>
-              <input type="text" id="no_rekening" name="no_rekening" placeholder="Contoh: 1234567890" inputmode="numeric" required>
-              <span class="err" id="no_rekening-error" role="alert"></span>
+          <div class="pay-info">
+            <div class="pay-info-top">Rekening Pembayaran</div>
+            <div class="pay-info-body">
+              <p class="pay-info-bank">Bank BNI</p>
+              <p class="pay-info-number" id="rekNum">2137416261</p>
+              <p class="pay-info-name">a.n. Dian Purnamayanti</p>
+              <button class="pay-copy" id="copyRek" type="button">Salin Nomor</button>
             </div>
+          </div>
+
+          <div class="field-row">
             <div class="field">
               <label for="nominal_transfer">Nominal Transfer</label>
               <input type="text" id="nominal_transfer" name="nominal_transfer" placeholder="Pilih kategori" inputmode="numeric" disabled>
               <span class="err" id="nominal_transfer-error" role="alert"></span>
             </div>
-          </div>
-          <div class="field">
-            <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
-            <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
+            <div class="field">
+              <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
+              <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
+            </div>
           </div>
           <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Nominal otomatis sesuai kategori. Mohon melampirkan struk dan bukti transfer berhasil.</p>
 

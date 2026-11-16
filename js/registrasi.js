@@ -145,8 +145,6 @@
     }
     var email = val('email');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('email', 'Format email tidak valid.'); ok = false; }
-    var rek = val('no_rekening').replace(/[^\d]/g, '');
-    if (rek.length < 5) { setErr('no_rekening', 'Nomor rekening wajib diisi.'); ok = false; }
     if (val('kategori') && !val('nominal_transfer')) { setErr('nominal_transfer', 'Nominal transfer belum terisi.'); ok = false; }
     return ok;
   }
@@ -430,7 +428,6 @@
         kategori: val('kategori'),
         aminah: val('aminah_ke'),
         email: val('email'),
-        no_rekening: val('no_rekening'),
         nominal_transfer: val('nominal_transfer'),
         attachment_path: '',
         attachment_name: ''
@@ -494,10 +491,23 @@
     }
   }
 
+  function initCopyRek() {
+    var btn = document.getElementById('copyRek');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText('2137416261').then(function () {
+        btn.textContent = '✓ Disalin!';
+        setTimeout(function () { btn.textContent = 'Salin Nomor'; }, 2000);
+      });
+    });
+  }
+
   function boot() {
     initProgress();
     initReveal();
     initRail();
+    initCopyRek();
     initForm();
   }
 

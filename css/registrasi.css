@@ -572,3 +572,29 @@ ul,ol{list-style:none}
   border-radius:4px;color:var(--wood);
   font-size:.86rem;line-height:1.6;text-align:center;
 }
+
+.pay-info{
+  border:1px solid var(--cream-3);border-radius:4px;overflow:hidden;
+  background:var(--cream);
+}
+.pay-info-top{
+  background:var(--wood);padding:9px 18px;
+  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--maroon-deep);font-weight:600;
+}
+.pay-info-body{padding:16px 18px}
+.pay-info-bank{
+  font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:4px;
+}
+.pay-info-number{
+  font-family:var(--serif);font-size:1.3rem;color:var(--maroon);
+  letter-spacing:.04em;
+}
+.pay-info-name{font-size:.82rem;color:var(--olive);margin-top:3px}
+.pay-copy{
+  display:inline-flex;align-items:center;gap:6px;margin-top:9px;
+  font-size:.72rem;font-weight:600;color:var(--brown);
+  padding:3px 0;transition:opacity .2s,color .2s;
+}
+.pay-copy:hover{opacity:.7;color:var(--maroon)}

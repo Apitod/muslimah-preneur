@@ -113,11 +113,13 @@ body.form-page{min-height:100vh;background:var(--cream);display:flex;flex-direct
 .card-body{padding:clamp(20px,3.4vw,28px) clamp(20px,3.4vw,28px) clamp(18px,3vw,24px);display:flex;flex-direction:column;gap:16px}
 
 /* ── TIER PICKER ── */
-.tier-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tier-picker{display:grid;grid-template-columns:1fr;gap:12px}
 .tier-opt{
+  display:grid;grid-template-columns:minmax(150px,200px) 1fr;
+  gap:18px;align-items:start;
   border:1.5px solid var(--cream-3);border-radius:3px;
-  padding:18px 14px;cursor:pointer;text-align:center;
-  position:relative;
+  padding:18px 20px;cursor:pointer;text-align:left;
+  position:relative;background:var(--white);
   transition:border-color var(--t-fast),background var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);
   -webkit-tap-highlight-color:transparent;
 }
@@ -131,6 +133,20 @@ body.form-page{min-height:100vh;background:var(--cream);display:flex;flex-direct
 .tier-opt.selected::after{
   content:'✓';position:absolute;top:8px;right:10px;
   font-size:.62rem;color:var(--maroon);font-weight:700;
+}
+.tier-opt-main{
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding-right:18px;border-right:1px solid var(--cream-3);
+  align-self:stretch;
+}
+.tier-opt-benefits{
+  display:grid;gap:8px;list-style:none;
+  font-size:.78rem;line-height:1.55;color:var(--olive);
+}
+.tier-opt-benefits li{position:relative;padding-left:17px}
+.tier-opt-benefits li::before{
+  content:'✓';position:absolute;left:0;top:0;
+  font-size:.7rem;font-weight:700;color:var(--maroon);
 }
 .tier-opt-badge{
   display:inline-block;font-size:.58rem;font-weight:700;
@@ -302,6 +318,8 @@ body.form-page{min-height:100vh;background:var(--cream);display:flex;flex-direct
 /* ── RESPONSIF ── */
 @media (max-width:600px){
   .tier-picker{grid-template-columns:1fr}
+  .tier-opt{grid-template-columns:1fr;gap:14px}
+  .tier-opt-main{border-right:0;border-bottom:1px solid var(--cream-3);padding-right:0;padding-bottom:14px}
   .field-row{grid-template-columns:1fr}
   .card-body{padding:20px}
   .btn-submit{width:100%;padding:16px 24px}

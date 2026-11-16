@@ -61,7 +61,6 @@ module.exports = async function handler(req, res) {
   if (type === 'peserta') {
     const nama = clean(body.nama);
     const whatsapp = clean(body.whatsapp, 30).replace(/[^\d+]/g, '');
-    const accountNumber = clean(body.no_rekening, 50).replace(/[^\d]/g, '');
     const kategori = clean(body.kategori, 100);
     const aaminah = clean(body.aminah, 100);
     const email = clean(body.email, 200);
@@ -73,9 +72,6 @@ module.exports = async function handler(req, res) {
 
     if (!nama || !whatsapp || !kategori) {
       return send(res, 400, { ok: false, error: 'Data peserta belum lengkap.' });
-    }
-    if (!accountNumber || accountNumber.length < 5) {
-      return send(res, 400, { ok: false, error: 'Nomor rekening tidak valid.' });
     }
     if (!nominal) {
       return send(res, 400, { ok: false, error: 'Kategori peserta tidak valid.' });
@@ -98,7 +94,6 @@ module.exports = async function handler(req, res) {
       .insert({
         name: nama,
         whatsapp: whatsapp,
-        account_number: accountNumber,
         category: kategori,
         aaminah: aaminah || null,
         email: email || null,

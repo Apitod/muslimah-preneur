@@ -14,7 +14,6 @@ create table if not exists participants (
   ticket_no text not null unique,
   name text not null,
   whatsapp text not null,
-  account_number text,
   category text not null,
   aaminah text,
   email text,

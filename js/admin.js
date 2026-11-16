@@ -83,7 +83,7 @@
     setStatus(el.dashStatus, '', '');
     el.pesertaEmpty.hidden = true;
     el.sponsorEmpty.hidden = true;
-    el.pesertaBody.innerHTML = '<tr><td colspan="10" class="muted">Memuat data peserta…</td></tr>';
+    el.pesertaBody.innerHTML = '<tr><td colspan="9" class="muted">Memuat data peserta…</td></tr>';
     el.sponsorBody.innerHTML = '<tr><td colspan="9" class="muted">Memuat data sponsor…</td></tr>';
 
     var results = await Promise.all([
@@ -107,7 +107,7 @@
   function matches(row, q) {
     if (!q) return true;
     var hay = [
-      row.name, row.whatsapp, row.account_number, row.ticket_no, row.category, row.aaminah,
+      row.name, row.whatsapp, row.ticket_no, row.category, row.aaminah,
       row.company, row.pic_name, row.invoice_no, row.package, row.email, row.transfer_name
     ].join(' ').toLowerCase();
     return hay.indexOf(q) !== -1;
@@ -139,7 +139,6 @@
         '<td>' + esc(row.ticket_no) + '</td>' +
         '<td>' + esc(row.name) + '</td>' +
         '<td>' + esc(row.whatsapp) + '</td>' +
-        '<td>' + esc(row.account_number) + '</td>' +
         '<td>' + esc(row.category) + '</td>' +
         '<td>' + (row.aaminah ? esc(row.aaminah) : '<span class="muted">—</span>') + '</td>' +
         '<td>' + fmtMoney(row.nominal_transfer) + '</td>' +
