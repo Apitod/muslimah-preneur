@@ -2,6 +2,7 @@
   'use strict';
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var MUSLIMAH_DIK_CUTOFF = new Date('2026-11-30T23:59:59+08:00').getTime();
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -144,7 +145,9 @@
     }
     var email = val('email');
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('email', 'Format email tidak valid.'); ok = false; }
-    if (!val('nominal_transfer')) { setErr('nominal_transfer', 'Nominal transfer wajib diisi.'); ok = false; }
+    var rek = val('no_rekening').replace(/[^\d]/g, '');
+    if (rek.length < 5) { setErr('no_rekening', 'Nomor rekening wajib diisi.'); ok = false; }
+    if (val('kategori') && !val('nominal_transfer')) { setErr('nominal_transfer', 'Nominal transfer belum terisi.'); ok = false; }
     return ok;
   }
 
@@ -350,6 +353,8 @@
     var kategoriEl = document.getElementById('kategori');
     var aminahField = document.getElementById('aminahField');
     var aminahInput = document.getElementById('aminah_ke');
+    var nominalInput = document.getElementById('nominal_transfer');
+    var dikClosedNote = document.getElementById('dikClosedNote');
 
     function toggleAminah() {
       if (!aminahField) return;
@@ -361,9 +366,30 @@
       }
     }
 
+    function syncNominal() {
+      if (!nominalInput) return;
+      var kategori = kategoriEl ? kategoriEl.value : '';
+      if (kategori === 'Muslimah DIK') nominalInput.value = '175.000';
+      else if (kategori === 'Umum') nominalInput.value = '200.000';
+      else nominalInput.value = '';
+    }
+
     if (kategoriEl) {
-      kategoriEl.addEventListener('change', toggleAminah);
+      kategoriEl.addEventListener('change', function () {
+        toggleAminah();
+        syncNominal();
+      });
       toggleAminah();
+      syncNominal();
+    }
+
+    if (Date.now() > MUSLIMAH_DIK_CUTOFF) {
+      var dikOpt = kategoriEl ? kategoriEl.querySelector('option[value="Muslimah DIK"]') : null;
+      if (dikOpt) dikOpt.disabled = true;
+      if (kategoriEl && kategoriEl.value === 'Muslimah DIK') kategoriEl.value = 'Umum';
+      if (dikClosedNote) dikClosedNote.hidden = false;
+      toggleAminah();
+      syncNominal();
     }
 
     $$('input, select', form).forEach(function (el) {
@@ -404,6 +430,7 @@
         kategori: val('kategori'),
         aminah: val('aminah_ke'),
         email: val('email'),
+        no_rekening: val('no_rekening'),
         nominal_transfer: val('nominal_transfer'),
         attachment_path: '',
         attachment_name: ''
@@ -453,6 +480,7 @@
         form.reset();
         clearAll();
         toggleAminah();
+        syncNominal();
         setStatus(formStatus, '', '');
         if (thanksOverlay) { thanksOverlay.hidden = true; thanksOverlay.classList.remove('show'); }
         ticketImg.removeAttribute('src');

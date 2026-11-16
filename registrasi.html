@@ -65,6 +65,8 @@
       </li>
     </ul>
 
+    <p class="reg-closed" id="dikClosedNote" hidden>Pendaftaran Muslimah DIK sudah ditutup. Silakan pilih kategori Umum.</p>
+
     <p class="reg-help">Butuh bantuan pendaftaran? Hubungi <strong>Frista</strong> · <a href="https://wa.me/6285343723889" target="_blank" rel="noopener noreferrer">0853 4372 3889</a></p>
 
     <form id="hadirForm" class="reg-form" novalidate>
@@ -107,16 +109,21 @@
 
           <div class="field-row">
             <div class="field">
-              <label for="nominal_transfer">Nominal Transfer <span aria-hidden="true">*</span></label>
-              <input type="text" id="nominal_transfer" name="nominal_transfer" placeholder="175.000" inputmode="numeric" required>
-              <span class="err" id="nominal_transfer-error" role="alert"></span>
+              <label for="no_rekening">Nomor Rekening <span aria-hidden="true">*</span></label>
+              <input type="text" id="no_rekening" name="no_rekening" placeholder="Contoh: 1234567890" inputmode="numeric" required>
+              <span class="err" id="no_rekening-error" role="alert"></span>
             </div>
             <div class="field">
-              <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
-              <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
+              <label for="nominal_transfer">Nominal Transfer</label>
+              <input type="text" id="nominal_transfer" name="nominal_transfer" placeholder="Pilih kategori" inputmode="numeric" disabled>
+              <span class="err" id="nominal_transfer-error" role="alert"></span>
             </div>
           </div>
-          <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Mohon melampirkan struk dan bukti transfer berhasil.</p>
+          <div class="field">
+            <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
+            <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
+          </div>
+          <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Nominal otomatis sesuai kategori. Mohon melampirkan struk dan bukti transfer berhasil.</p>
 
           <p class="form-note">Data Anda disimpan untuk keperluan acara. Tiket dibuat setelah data tersimpan.</p>
           <p class="form-status" id="formStatus" role="alert"></p>

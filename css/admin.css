@@ -214,3 +214,11 @@ tbody td:first-child{font-weight:600;color:var(--maroon);white-space:nowrap}
   .admin-dashboard{animation:none!important}
   *{transition-duration:.01ms!important}
 }
+
+.delete-btn{
+  font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--danger);border:1px solid rgba(178,59,46,.3);
+  border-radius:999px;padding:5px 10px;
+  transition:background .2s,border-color .2s;
+}
+.delete-btn:hover{background:rgba(178,59,46,.08);border-color:var(--danger)}

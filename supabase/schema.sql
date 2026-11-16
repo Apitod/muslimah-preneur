@@ -14,6 +14,7 @@ create table if not exists participants (
   ticket_no text not null unique,
   name text not null,
   whatsapp text not null,
+  account_number text,
   category text not null,
   aaminah text,
   email text,
@@ -113,6 +114,14 @@ drop policy if exists "admin read sponsors" on sponsors;
 create policy "admin read sponsors" on sponsors
 for select using (public.is_admin());
 
+drop policy if exists "admin delete participants" on participants;
+create policy "admin delete participants" on participants
+for delete using (public.is_admin());
+
+drop policy if exists "admin delete sponsors" on sponsors;
+create policy "admin delete sponsors" on sponsors
+for delete using (public.is_admin());
+
 grant usage on schema public to service_role;
 grant insert, select on participants, sponsors to service_role;
 grant select on admins to authenticated;
@@ -134,3 +143,7 @@ on conflict (id) do update set
 drop policy if exists "admin read attachments" on storage.objects;
 create policy "admin read attachments" on storage.objects
 for select using (bucket_id = 'bukti-transfer' and public.is_admin());
+
+drop policy if exists "admin delete attachments" on storage.objects;
+create policy "admin delete attachments" on storage.objects
+for delete using (bucket_id = 'bukti-transfer' and public.is_admin());

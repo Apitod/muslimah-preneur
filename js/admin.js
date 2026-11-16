@@ -83,8 +83,8 @@
     setStatus(el.dashStatus, '', '');
     el.pesertaEmpty.hidden = true;
     el.sponsorEmpty.hidden = true;
-    el.pesertaBody.innerHTML = '<tr><td colspan="8" class="muted">Memuat data peserta…</td></tr>';
-    el.sponsorBody.innerHTML = '<tr><td colspan="8" class="muted">Memuat data sponsor…</td></tr>';
+    el.pesertaBody.innerHTML = '<tr><td colspan="10" class="muted">Memuat data peserta…</td></tr>';
+    el.sponsorBody.innerHTML = '<tr><td colspan="9" class="muted">Memuat data sponsor…</td></tr>';
 
     var results = await Promise.all([
       sb.from('participants').select('*').order('created_at', { ascending: false }),
@@ -107,7 +107,7 @@
   function matches(row, q) {
     if (!q) return true;
     var hay = [
-      row.name, row.whatsapp, row.ticket_no, row.category, row.aaminah,
+      row.name, row.whatsapp, row.account_number, row.ticket_no, row.category, row.aaminah,
       row.company, row.pic_name, row.invoice_no, row.package, row.email, row.transfer_name
     ].join(' ').toLowerCase();
     return hay.indexOf(q) !== -1;
@@ -118,6 +118,12 @@
     return '<button type="button" class="attachment-btn" data-path="' +
       esc(row.attachment_path) + '" data-name="' + esc(row.attachment_name || '') +
       '">Lihat bukti</button>';
+  }
+
+  function deleteCell(type, row, name) {
+    return '<button type="button" class="delete-btn" data-type="' + type +
+      '" data-id="' + esc(row.id) + '" data-path="' + esc(row.attachment_path || '') +
+      '" data-name="' + esc(name || '') + '">Hapus</button>';
   }
 
   function renderParticipants(list) {
@@ -133,11 +139,13 @@
         '<td>' + esc(row.ticket_no) + '</td>' +
         '<td>' + esc(row.name) + '</td>' +
         '<td>' + esc(row.whatsapp) + '</td>' +
+        '<td>' + esc(row.account_number) + '</td>' +
         '<td>' + esc(row.category) + '</td>' +
         '<td>' + (row.aaminah ? esc(row.aaminah) : '<span class="muted">—</span>') + '</td>' +
         '<td>' + fmtMoney(row.nominal_transfer) + '</td>' +
         '<td>' + attachmentCell(row) + '</td>' +
         '<td>' + fmtDate(row.created_at) + '</td>' +
+        '<td>' + deleteCell('participant', row, row.name) + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -160,6 +168,7 @@
         '<td>' + fmtMoney(row.amount) + '</td>' +
         '<td>' + attachmentCell(row) + '</td>' +
         '<td>' + fmtDate(row.created_at) + '</td>' +
+        '<td>' + deleteCell('sponsor', row, row.company) + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -196,6 +205,22 @@
     window.open(res.data.signedUrl, '_blank', 'noopener');
   }
 
+  async function deleteRow(type, id, path, name) {
+    if (!id) return;
+    if (!confirm('Hapus data ' + (name || 'ini') + '?')) return;
+    if (path) {
+      var rm = await sb.storage.from('bukti-transfer').remove([path]);
+      if (rm.error) console.warn('Gagal menghapus lampiran:', rm.error.message);
+    }
+    var table = type === 'sponsor' ? 'sponsors' : 'participants';
+    var res = await sb.from(table).delete().eq('id', id);
+    if (res.error) {
+      alert('Gagal menghapus data: ' + res.error.message);
+      return;
+    }
+    await loadData();
+  }
+
   function bind() {
     el.loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -226,9 +251,12 @@
     el.searchInput.addEventListener('input', render);
 
     document.addEventListener('click', function (e) {
-      var btn = e.target.closest('.attachment-btn');
-      if (!btn) return;
-      openAttachment(btn.getAttribute('data-path'));
+      var att = e.target.closest('.attachment-btn');
+      if (att) { openAttachment(att.getAttribute('data-path')); return; }
+      var del = e.target.closest('.delete-btn');
+      if (del) {
+        deleteRow(del.getAttribute('data-type'), del.getAttribute('data-id'), del.getAttribute('data-path'), del.getAttribute('data-name'));
+      }
     });
   }
 
