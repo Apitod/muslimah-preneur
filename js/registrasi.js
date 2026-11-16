@@ -353,7 +353,6 @@
     var aminahInput = document.getElementById('aminah_ke');
     var nominalInput = document.getElementById('nominal_transfer');
     var dikClosedNote = document.getElementById('dikClosedNote');
-    var umumLockedNote = document.getElementById('umumLockedNote');
 
     function toggleAminah() {
       if (!aminahField) return;
@@ -388,7 +387,6 @@
     if (earlyBird) {
       if (umumOpt) umumOpt.disabled = true;
       if (kategoriEl && kategoriEl.value === 'Umum') kategoriEl.value = 'Muslimah DIK';
-      if (umumLockedNote) umumLockedNote.hidden = false;
     } else {
       if (dikOpt) dikOpt.disabled = true;
       if (kategoriEl && kategoriEl.value === 'Muslimah DIK') kategoriEl.value = 'Umum';
