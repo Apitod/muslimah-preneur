@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const BUCKET = 'bukti-transfer';
-const MUSLIMAH_DIK_CUTOFF = new Date('2026-11-30T23:59:59+08:00').getTime();
+const EARLY_BIRD_END = new Date('2026-11-30T23:59:59+08:00').getTime();
 const MAX_FIELD = 500;
 
 function clean(value, max) {
@@ -64,9 +64,11 @@ module.exports = async function handler(req, res) {
     const kategori = clean(body.kategori, 100);
     const aaminah = clean(body.aminah, 100);
     const email = clean(body.email, 200);
+    const earlyBird = Date.now() <= EARLY_BIRD_END;
     let nominal = 0;
-    if (kategori === 'Muslimah DIK') nominal = 175000;
-    else if (kategori === 'Umum') nominal = 200000;
+    if (kategori === 'Muslimah DIK' || kategori === 'Umum') {
+      nominal = earlyBird ? 175000 : 200000;
+    }
     const attachmentPath = clean(body.attachment_path, 500);
     const attachmentName = clean(body.attachment_name, 255);
 
@@ -75,13 +77,6 @@ module.exports = async function handler(req, res) {
     }
     if (!nominal) {
       return send(res, 400, { ok: false, error: 'Kategori peserta tidak valid.' });
-    }
-    const earlyBird = Date.now() <= MUSLIMAH_DIK_CUTOFF;
-    if (kategori === 'Umum' && earlyBird) {
-      return send(res, 400, { ok: false, error: 'Tiket Umum baru dibuka 1 Desember 2026.' });
-    }
-    if (kategori === 'Muslimah DIK' && !earlyBird) {
-      return send(res, 400, { ok: false, error: 'Pendaftaran Early Bird (Muslimah DIK) sudah ditutup.' });
     }
     if (kategori === 'Muslimah DIK' && !aaminah) {
       return send(res, 400, { ok: false, error: 'Aaminah wajib diisi.' });

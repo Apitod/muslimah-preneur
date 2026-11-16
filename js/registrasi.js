@@ -2,7 +2,7 @@
   'use strict';
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var MUSLIMAH_DIK_CUTOFF = new Date('2026-11-30T23:59:59+08:00').getTime();
+  var EARLY_BIRD_END = new Date('2026-11-30T23:59:59+08:00').getTime();
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -352,7 +352,6 @@
     var aminahField = document.getElementById('aminahField');
     var aminahInput = document.getElementById('aminah_ke');
     var nominalInput = document.getElementById('nominal_transfer');
-    var dikClosedNote = document.getElementById('dikClosedNote');
 
     function toggleAminah() {
       if (!aminahField) return;
@@ -367,9 +366,8 @@
     function syncNominal() {
       if (!nominalInput) return;
       var kategori = kategoriEl ? kategoriEl.value : '';
-      if (kategori === 'Muslimah DIK') nominalInput.value = '175.000';
-      else if (kategori === 'Umum') nominalInput.value = '200.000';
-      else nominalInput.value = '';
+      if (!kategori) { nominalInput.value = ''; return; }
+      nominalInput.value = Date.now() <= EARLY_BIRD_END ? '175.000' : '200.000';
     }
 
     if (kategoriEl) {
@@ -380,20 +378,6 @@
       toggleAminah();
       syncNominal();
     }
-
-    var earlyBird = Date.now() <= MUSLIMAH_DIK_CUTOFF;
-    var dikOpt = kategoriEl ? kategoriEl.querySelector('option[value="Muslimah DIK"]') : null;
-    var umumOpt = kategoriEl ? kategoriEl.querySelector('option[value="Umum"]') : null;
-    if (earlyBird) {
-      if (umumOpt) umumOpt.disabled = true;
-      if (kategoriEl && kategoriEl.value === 'Umum') kategoriEl.value = 'Muslimah DIK';
-    } else {
-      if (dikOpt) dikOpt.disabled = true;
-      if (kategoriEl && kategoriEl.value === 'Muslimah DIK') kategoriEl.value = 'Umum';
-      if (dikClosedNote) dikClosedNote.hidden = false;
-    }
-    toggleAminah();
-    syncNominal();
 
     $$('input, select', form).forEach(function (el) {
       el.addEventListener('input', function () { clearErr(el.id); });
@@ -417,6 +401,7 @@
       event.preventDefault();
       clearAll();
       setStatus(formStatus, '', '');
+      syncNominal();
 
       if (!validate()) {
         var first = $('.err.show', form);
