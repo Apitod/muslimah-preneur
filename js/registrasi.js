@@ -353,6 +353,7 @@
     var aminahInput = document.getElementById('aminah_ke');
     var nominalInput = document.getElementById('nominal_transfer');
     var dikClosedNote = document.getElementById('dikClosedNote');
+    var umumLockedNote = document.getElementById('umumLockedNote');
 
     function toggleAminah() {
       if (!aminahField) return;
@@ -381,14 +382,20 @@
       syncNominal();
     }
 
-    if (Date.now() > MUSLIMAH_DIK_CUTOFF) {
-      var dikOpt = kategoriEl ? kategoriEl.querySelector('option[value="Muslimah DIK"]') : null;
+    var earlyBird = Date.now() <= MUSLIMAH_DIK_CUTOFF;
+    var dikOpt = kategoriEl ? kategoriEl.querySelector('option[value="Muslimah DIK"]') : null;
+    var umumOpt = kategoriEl ? kategoriEl.querySelector('option[value="Umum"]') : null;
+    if (earlyBird) {
+      if (umumOpt) umumOpt.disabled = true;
+      if (kategoriEl && kategoriEl.value === 'Umum') kategoriEl.value = 'Muslimah DIK';
+      if (umumLockedNote) umumLockedNote.hidden = false;
+    } else {
       if (dikOpt) dikOpt.disabled = true;
       if (kategoriEl && kategoriEl.value === 'Muslimah DIK') kategoriEl.value = 'Umum';
       if (dikClosedNote) dikClosedNote.hidden = false;
-      toggleAminah();
-      syncNominal();
     }
+    toggleAminah();
+    syncNominal();
 
     $$('input, select', form).forEach(function (el) {
       el.addEventListener('input', function () { clearErr(el.id); });

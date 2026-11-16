@@ -76,8 +76,12 @@ module.exports = async function handler(req, res) {
     if (!nominal) {
       return send(res, 400, { ok: false, error: 'Kategori peserta tidak valid.' });
     }
-    if (kategori === 'Muslimah DIK' && Date.now() > MUSLIMAH_DIK_CUTOFF) {
-      return send(res, 400, { ok: false, error: 'Pendaftaran Muslimah DIK sudah ditutup.' });
+    const earlyBird = Date.now() <= MUSLIMAH_DIK_CUTOFF;
+    if (kategori === 'Umum' && earlyBird) {
+      return send(res, 400, { ok: false, error: 'Tiket Umum baru dibuka 1 Desember 2026.' });
+    }
+    if (kategori === 'Muslimah DIK' && !earlyBird) {
+      return send(res, 400, { ok: false, error: 'Pendaftaran Early Bird (Muslimah DIK) sudah ditutup.' });
     }
     if (kategori === 'Muslimah DIK' && !aaminah) {
       return send(res, 400, { ok: false, error: 'Aaminah wajib diisi.' });
