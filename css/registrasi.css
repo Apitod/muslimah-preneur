@@ -334,6 +334,7 @@ ul,ol{list-style:none}
 }
 .f-logo{height:38px;width:auto;margin:0 auto 16px;opacity:.92}
 .f-brand{font-family:var(--serif);font-size:.94rem;color:rgba(235,214,183,.78);margin-bottom:10px}
+.f-social{margin-top:6px;font-size:.76rem;color:rgba(235,214,183,.58)}
 .f-links{margin-top:10px}
 .site-footer a{color:rgba(235,214,183,.68);transition:color var(--t-fast)}
 .site-footer a:hover{color:var(--wood)}

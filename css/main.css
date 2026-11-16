@@ -745,6 +745,7 @@ footer{
   font-family:var(--serif);font-size:.94rem;
   color:rgba(235,214,183,.78);margin-bottom:10px;
 }
+.f-social{margin-top:6px;font-size:.76rem;color:rgba(235,214,183,.58)}
 footer a{color:rgba(235,214,183,.68);transition:color var(--t-fast)}
 footer a:hover{color:var(--wood)}
 
