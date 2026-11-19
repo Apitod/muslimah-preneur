@@ -316,7 +316,7 @@ begin
   if v_category not in ('MQ Aaminah', 'Selain MQ. Aaminah/DIK') then return jsonb_build_object('ok', false, 'error', 'Kategori peserta tidak valid.'); end if;
   if v_attachment_path = '' then return jsonb_build_object('ok', false, 'error', 'Bukti transfer wajib diunggah.'); end if;
   if v_category = 'MQ Aaminah' then
-    if v_quantity <> 1 then return jsonb_build_object('ok', false, 'error', 'Kategori MQ Aaminah hanya 1 tiket per order.'); end if;
+    if v_quantity < 1 or v_quantity > 5 then return jsonb_build_object('ok', false, 'error', 'Jumlah tiket harus 1 sampai 5.'); end if;
     if v_aaminah is null then return jsonb_build_object('ok', false, 'error', 'Aaminah wajib diisi.'); end if;
   else
     if v_quantity < 1 or v_quantity > 5 then return jsonb_build_object('ok', false, 'error', 'Jumlah tiket harus 1 sampai 5.'); end if;
@@ -333,6 +333,9 @@ begin
   v_regular_available := greatest(300 - v_regular_reserved, 0);
   v_early_qty := least(v_quantity, v_early_available);
   v_regular_qty := v_quantity - v_early_qty;
+  if v_category = 'MQ Aaminah' and v_quantity > 1 and v_early_qty > 0 then
+    return jsonb_build_object('ok', false, 'error', 'Kategori MQ Aaminah hanya 1 tiket selama kuota early bird tersedia.');
+  end if;
   if v_regular_qty > v_regular_available then
     return jsonb_build_object('ok', false, 'error', 'Kuota tiket tidak mencukupi.',
       'pricing', jsonb_build_object('earlyBirdRemaining', v_early_available, 'regularRemaining', v_regular_available, 'earlyBirdPrice', 175000, 'regularPrice', 200000));

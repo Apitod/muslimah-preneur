@@ -184,21 +184,29 @@
       return n;
     }
 
+    function canBulkNow(kategori) {
+      return kategori === 'Selain MQ. Aaminah/DIK' ||
+        (kategori === 'MQ Aaminah' && (Number(info.earlyBirdRemaining) || 0) <= 0);
+    }
+
     function syncVisibility() {
       var kategori = kategoriEl ? kategoriEl.value : '';
       var isAminah = kategori === 'MQ Aaminah';
-      var isBulk = kategori === 'Selain MQ. Aaminah/DIK';
+      var canBulk = canBulkNow(kategori);
+      var showCode = isAminah && (Number(info.earlyBirdRemaining) || 0) > 0;
       if (aminahField) aminahField.hidden = !isAminah;
-      if (codeField) codeField.hidden = !isAminah;
-      if (qtyField) qtyField.hidden = !isBulk;
+      if (codeField) codeField.hidden = !showCode;
+      if (qtyField) qtyField.hidden = !canBulk;
       if (!isAminah) {
         if (aminahInput) aminahInput.value = '';
+        clearErr('aminah_ke');
+      }
+      if (!showCode) {
         if (codeInput) codeInput.value = '';
         codeState = { checked: false, valid: false, discount: 0 };
-        clearErr('aminah_ke');
         clearErr('kode_diskon');
       }
-      if (!isBulk) {
+      if (!canBulk) {
         if (qtyInput) qtyInput.value = '1';
         clearErr('jumlah_tiket');
       }
@@ -214,7 +222,7 @@
         if (quotaDetail) quotaDetail.textContent = '';
         return;
       }
-      var qty = kategori === 'MQ Aaminah' ? 1 : quantity();
+      var qty = canBulkNow(kategori) ? quantity() : 1;
       var earlyAvailable = Math.max(0, Number(info.earlyBirdRemaining) || 0);
       var regularAvailable = Math.max(0, Number(info.regularRemaining) || 0);
       var earlyQty = Math.min(qty, earlyAvailable);
@@ -251,7 +259,7 @@
         setStatus(formStatus, 'Pendaftaran sudah ditutup.', 'error');
         if (submitBtn) submitBtn.disabled = true;
       }
-      syncPricing();
+      syncVisibility();
     }
 
     async function checkCode() {
@@ -300,7 +308,7 @@
       } else if (kategori === 'MQ Aaminah' && !val('aminah_ke')) {
         setErr('aminah_ke', 'Aaminah wajib diisi.'); ok = false;
       }
-      if (kategori === 'Selain MQ. Aaminah/DIK') {
+      if (canBulkNow(kategori)) {
         var q = quantity();
         if (q < 1 || q > 5) { setErr('jumlah_tiket', 'Jumlah tiket harus 1 sampai 5.'); ok = false; }
       }
@@ -373,7 +381,7 @@
       }
 
       var kategori = val('kategori');
-      var qty = kategori === 'MQ Aaminah' ? 1 : quantity();
+      var qty = canBulkNow(kategori) ? quantity() : 1;
       var file = buktiInput && buktiInput.files && buktiInput.files[0] ? buktiInput.files[0] : null;
       var data = {
         type: 'peserta',

@@ -112,9 +112,6 @@ module.exports = async function handler(req, res) {
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 5) {
       return send(res, 400, { ok: false, error: 'Jumlah tiket harus 1 sampai 5.' });
     }
-    if (kategori === 'MQ Aaminah' && quantity !== 1) {
-      return send(res, 400, { ok: false, error: 'Kategori MQ Aaminah hanya 1 tiket per order.' });
-    }
     if (!attachmentPath || !validAttachment(attachmentPath, 'peserta')) {
       return send(res, 400, { ok: false, error: 'Bukti transfer wajib diunggah.' });
     }
