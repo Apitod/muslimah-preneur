@@ -67,7 +67,7 @@
       'adminEmail', 'logoutBtn', 'statEarly', 'statEarlySub', 'statCode', 'statCodeSub',
       'statRegular', 'statRegularSub', 'statTotal', 'statTotalSub', 'copyCode',
       'countPeserta', 'countSponsor', 'pesertaBody', 'sponsorBody',
-      'pesertaEmpty', 'sponsorEmpty', 'searchInput', 'refreshBtn', 'printBtn', 'printSheet', 'dashStatus',
+      'pesertaEmpty', 'sponsorEmpty', 'searchInput', 'refreshBtn', 'printBtn', 'dashStatus',
       'proofModal', 'proofTitle', 'proofImage', 'proofFrame', 'proofOpenLink', 'closeProof', 'proofVerify'
     ].forEach(function (id) { el[id] = $(id); });
   }
@@ -444,53 +444,109 @@
     await loadData();
   }
 
-  function printAttendance() {
+  function downloadAttendancePdf() {
     if (!state.tickets.length) {
       alert('Belum ada tiket terverifikasi untuk dicetak.');
       return;
     }
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert('Library PDF belum termuat. Periksa koneksi lalu muat ulang halaman.');
+      return;
+    }
+
     var ordersById = {};
     state.orders.forEach(function (row) { ordersById[row.id] = row; });
-    var rows = state.tickets.slice().sort(function (a, b) {
+    var tickets = state.tickets.slice().sort(function (a, b) {
       return Number(a.ticket_no) - Number(b.ticket_no);
-    }).map(function (ticket) {
+    });
+
+    var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var margin = 15;
+    var tableW = 180;
+    var cols = [22, 70, 58, 30];
+    var xs = [margin, margin + cols[0], margin + cols[0] + cols[1], margin + cols[0] + cols[1] + cols[2]];
+    var y = 18;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('DAFTAR HADIR PESERTA', margin, y);
+    y += 8;
+    doc.setFontSize(19);
+    doc.text('Muslimah Preneur', margin, y);
+    y += 7;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text("Jum'at, 25 Desember 2026 · Max Ballroom Hotel Maxone Makassar", margin, y);
+    y += 6;
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, margin + tableW, y);
+    y += 7;
+    doc.setFontSize(8.5);
+    var printedAt = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+    doc.text('Total tiket terverifikasi: ' + tickets.length, margin, y);
+    doc.text('Dicetak: ' + printedAt, margin + tableW, y, { align: 'right' });
+    y += 6;
+
+    function drawTableHead() {
+      doc.setFillColor(233, 233, 233);
+      doc.setLineWidth(0.25);
+      doc.rect(margin, y, tableW, 10, 'F');
+      doc.rect(margin, y, tableW, 10);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      var labels = ['NO. TIKET', 'NAMA', 'KATEGORI', 'HADIR'];
+      labels.forEach(function (label, i) {
+        doc.text(label, xs[i] + cols[i] / 2, y + 6.5, { align: 'center' });
+      });
+      y += 10;
+    }
+
+    drawTableHead();
+
+    tickets.forEach(function (ticket) {
+      if (y + 14 > 282) {
+        doc.addPage();
+        y = 20;
+        drawTableHead();
+      }
       var order = ordersById[ticket.order_id] || {};
       var category = (ticket.category || order.category || '') +
         (ticket.aaminah ? ' · ' + ticket.aaminah : '');
-      return '<tr>' +
-        '<td class="ticket-no">' + esc(ticket.ticket_no) + '</td>' +
-        '<td>' + esc(ticket.name) + '</td>' +
-        '<td>' + esc(formatPhone(order.whatsapp)) + '</td>' +
-        '<td>' + esc(category) + '</td>' +
-        '<td class="attendance-cell"><span class="attendance-box" aria-label="Kolom hadir"></span></td>' +
-        '</tr>';
-    }).join('');
 
-    var printedAt = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
-    el.printSheet.innerHTML =
-      '<div class="print-head">' +
-        '<img src="assets/logo.webp" alt="MQ Aaminah">' +
-        '<div>' +
-          '<p class="print-kicker">Daftar Hadir Peserta</p>' +
-          '<h1>Muslimah Preneur</h1>' +
-          '<p>Jum\'at, 25 Desember 2026 · Max Ballroom Hotel Maxone Makassar</p>' +
-        '</div>' +
-      '</div>' +
-      '<div class="print-meta">' +
-        '<span>Total tiket terverifikasi: <strong>' + state.tickets.length + '</strong></span>' +
-        '<span>Dicetak: ' + esc(printedAt) + '</span>' +
-      '</div>' +
-      '<table class="print-table">' +
-        '<colgroup><col style="width:12%"><col style="width:30%"><col style="width:21%"><col style="width:23%"><col style="width:14%"></colgroup>' +
-        '<thead><tr><th>No. Tiket</th><th>Nama</th><th>Nomor WhatsApp</th><th>Kategori</th><th>Hadir</th></tr></thead>' +
-        '<tbody>' + rows + '</tbody>' +
-      '</table>' +
-      '<p class="print-foot">Tanda centang pada kolom Hadir diisi panitia saat registrasi ulang.</p>';
+      doc.setLineWidth(0.25);
+      doc.rect(margin, y, tableW, 14);
+      var vx = margin;
+      cols.forEach(function (w, i) {
+        if (i > 0) doc.line(vx, y, vx, y + 14);
+        vx += w;
+      });
 
-    var oldTitle = document.title;
-    document.title = 'Daftar Hadir Muslimah Preneur';
-    window.print();
-    setTimeout(function () { document.title = oldTitle; }, 800);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(ticket.ticket_no, xs[0] + cols[0] / 2, y + 9, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      var nameLines = doc.splitTextToSize(ticket.name || '', cols[1] - 4).slice(0, 2);
+      doc.text(nameLines, xs[1] + 2, y + 5.2);
+      var categoryLines = doc.splitTextToSize(category, cols[2] - 4).slice(0, 2);
+      doc.text(categoryLines, xs[2] + 2, y + 5.2);
+
+      var box = 12;
+      doc.setLineWidth(0.5);
+      doc.rect(xs[3] + (cols[3] - box) / 2, y + (14 - box) / 2, box, box);
+      y += 14;
+    });
+
+    y += 6;
+    if (y > 282) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text('Tanda centang pada kolom Hadir diisi panitia saat registrasi ulang.', margin, y);
+    doc.save('Daftar-Hadir-MuslimahPreneur.pdf');
   }
 
   function bind() {
@@ -520,7 +576,7 @@
     });
 
     el.refreshBtn.addEventListener('click', loadData);
-    el.printBtn.addEventListener('click', printAttendance);
+    el.printBtn.addEventListener('click', downloadAttendancePdf);
     el.searchInput.addEventListener('input', render);
 
     el.copyCode.addEventListener('click', function () {
