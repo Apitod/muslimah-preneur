@@ -1,9 +1,10 @@
 (function () {
   'use strict';
 
+  var GROUP_LINK = 'https://chat.whatsapp.com/CNjoFu56cYd4HU7vd50cnf?s=sw&p=i&iam=2';
   var el = {};
   var sb = null;
-  var state = { participants: [], sponsors: [] };
+  var state = { orders: [], tickets: [], sponsors: [], code: null };
   var money = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -38,11 +39,18 @@
     node.className = 'form-status' + (message ? ' show ' + (type || 'error') : '');
   }
 
+  function normalizePhone(value) {
+    var digits = String(value || '').replace(/[^\d]/g, '');
+    if (digits.charAt(0) === '0') digits = '62' + digits.slice(1);
+    return digits;
+  }
+
   function cache() {
     [
       'loginScreen', 'dashboard', 'loginForm', 'email', 'password', 'loginBtn', 'loginStatus',
-      'adminEmail', 'logoutBtn', 'statPeserta', 'statSponsor', 'statNominalPeserta',
-      'statNominalSponsor', 'countPeserta', 'countSponsor', 'pesertaBody', 'sponsorBody',
+      'adminEmail', 'logoutBtn', 'statEarly', 'statEarlySub', 'statCode', 'statCodeSub',
+      'statRegular', 'statRegularSub', 'statTotal', 'statTotalSub', 'copyCode',
+      'countPeserta', 'countSponsor', 'pesertaBody', 'sponsorBody',
       'pesertaEmpty', 'sponsorEmpty', 'searchInput', 'refreshBtn', 'dashStatus'
     ].forEach(function (id) { el[id] = $(id); });
   }
@@ -83,47 +91,90 @@
     setStatus(el.dashStatus, '', '');
     el.pesertaEmpty.hidden = true;
     el.sponsorEmpty.hidden = true;
-    el.pesertaBody.innerHTML = '<tr><td colspan="9" class="muted">Memuat data peserta…</td></tr>';
-    el.sponsorBody.innerHTML = '<tr><td colspan="9" class="muted">Memuat data sponsor…</td></tr>';
+    el.pesertaBody.innerHTML = '<tr><td colspan="11" class="muted">Memuat data peserta…</td></tr>';
+    el.sponsorBody.innerHTML = '<tr><td colspan="10" class="muted">Memuat data sponsor…</td></tr>';
 
     var results = await Promise.all([
-      sb.from('participants').select('*').order('created_at', { ascending: false }),
-      sb.from('sponsors').select('*').order('created_at', { ascending: false })
+      sb.from('participant_orders').select('*').order('created_at', { ascending: false }),
+      sb.from('participant_tickets').select('*').order('ticket_no', { ascending: true }),
+      sb.from('sponsors').select('*').order('created_at', { ascending: false }),
+      sb.from('discount_codes').select('*').eq('active', true).order('created_at', { ascending: false }).limit(1)
     ]);
 
-    if (results[0].error || results[1].error) {
-      var msg = (results[0].error && results[0].error.message) || (results[1].error && results[1].error.message) || 'Gagal memuat data.';
+    if (results[0].error || results[1].error || results[2].error || results[3].error) {
+      var msg = (results[0].error && results[0].error.message) ||
+        (results[1].error && results[1].error.message) ||
+        (results[2].error && results[2].error.message) ||
+        (results[3].error && results[3].error.message) ||
+        'Gagal memuat data.';
       setStatus(el.dashStatus, msg, 'error');
       el.pesertaBody.innerHTML = '';
       el.sponsorBody.innerHTML = '';
       return;
     }
 
-    state.participants = results[0].data || [];
-    state.sponsors = results[1].data || [];
+    state.orders = results[0].data || [];
+    state.tickets = results[1].data || [];
+    state.sponsors = results[2].data || [];
+    state.code = (results[3].data && results[3].data[0]) || null;
     render();
+  }
+
+  function ticketsFor(orderId) {
+    return state.tickets.filter(function (t) { return t.order_id === orderId; });
   }
 
   function matches(row, q) {
     if (!q) return true;
+    var ticketText = row.id ? ticketsFor(row.id).map(function (t) { return t.ticket_no; }).join(' ') : '';
     var hay = [
-      row.name, row.whatsapp, row.ticket_no, row.category, row.aaminah,
-      row.company, row.pic_name, row.invoice_no, row.package, row.email, row.transfer_name
+      row.order_no, row.name, row.whatsapp, row.category, row.aaminah,
+      row.company, row.pic_name, row.invoice_no, row.package, row.email,
+      row.transfer_name, ticketText
     ].join(' ').toLowerCase();
     return hay.indexOf(q) !== -1;
   }
 
-  function attachmentCell(row) {
-    if (!row.attachment_path) return '<span class="muted">—</span>';
-    return '<button type="button" class="attachment-btn" data-path="' +
-      esc(row.attachment_path) + '" data-name="' + esc(row.attachment_name || '') +
-      '">Lihat bukti</button>';
+  function statusBadge(status) {
+    var label = status === 'verified' ? 'Verified' : status === 'rejected' ? 'Rejected' : 'Pending';
+    return '<span class="status-badge status-' + esc(status) + '">' + label + '</span>';
   }
 
-  function deleteCell(type, row, name) {
-    return '<button type="button" class="delete-btn" data-type="' + type +
+  function attachmentCell(row, kind) {
+    if (!row.attachment_path) return '<span class="muted">—</span>';
+    return '<button type="button" class="attachment-btn' + (row.proof_viewed_at ? ' viewed' : '') + '"' +
+      ' data-kind="' + kind + '"' +
+      ' data-id="' + esc(row.id) + '"' +
+      ' data-path="' + esc(row.attachment_path) + '"' +
+      ' data-name="' + esc(row.attachment_name || '') + '">' +
+      (row.proof_viewed_at ? '✓ ' : '') + 'Lihat bukti</button>';
+  }
+
+  function actionButtons(type, row) {
+    var html = '';
+    if (row.status === 'pending') {
+      var disabled = row.proof_viewed_at ? '' : ' disabled title="Buka bukti transfer terlebih dahulu"';
+      html += '<button type="button" class="action-btn verify-btn" data-type="' + type +
+        '" data-id="' + esc(row.id) + '"' + disabled + '>Verifikasi</button>';
+      html += '<button type="button" class="action-btn reject-btn" data-type="' + type +
+        '" data-id="' + esc(row.id) + '"' + disabled + '>Tolak</button>';
+    }
+    if (row.status === 'verified') {
+      html += '<button type="button" class="action-btn wa-btn" data-type="' + type +
+        '" data-id="' + esc(row.id) + '">WhatsApp</button>';
+    }
+    html += '<button type="button" class="delete-btn" data-type="' + type +
       '" data-id="' + esc(row.id) + '" data-path="' + esc(row.attachment_path || '') +
-      '" data-name="' + esc(name || '') + '">Hapus</button>';
+      '" data-name="' + esc(type === 'sponsor' ? row.company : row.name) + '">Hapus</button>';
+    return '<div class="action-group">' + html + '</div>';
+  }
+
+  function ticketCell(order) {
+    var tickets = ticketsFor(order.id);
+    if (!tickets.length) return '<span class="muted">—</span>';
+    return '<div class="ticket-pills">' + tickets.map(function (t) {
+      return '<span class="ticket-pill">' + esc(t.ticket_no) + '</span>';
+    }).join('') + '</div>';
   }
 
   function renderParticipants(list) {
@@ -135,16 +186,19 @@
     }
     el.pesertaEmpty.hidden = true;
     el.pesertaBody.innerHTML = list.map(function (row) {
+      var category = row.category + (row.aaminah ? ' · ' + row.aaminah : '');
       return '<tr>' +
-        '<td>' + esc(row.ticket_no) + '</td>' +
+        '<td>' + esc(row.order_no) + '</td>' +
         '<td>' + esc(row.name) + '</td>' +
         '<td>' + esc(row.whatsapp) + '</td>' +
-        '<td>' + esc(row.category) + '</td>' +
-        '<td>' + (row.aaminah ? esc(row.aaminah) : '<span class="muted">—</span>') + '</td>' +
-        '<td>' + fmtMoney(row.nominal_transfer) + '</td>' +
-        '<td>' + attachmentCell(row) + '</td>' +
+        '<td>' + esc(category) + '</td>' +
+        '<td>' + esc(row.quantity) + '</td>' +
+        '<td>' + fmtMoney(row.total_amount) + '</td>' +
+        '<td>' + attachmentCell(row, 'participant') + '</td>' +
+        '<td>' + statusBadge(row.status) + '</td>' +
+        '<td>' + ticketCell(row) + '</td>' +
         '<td>' + fmtDate(row.created_at) + '</td>' +
-        '<td>' + deleteCell('participant', row, row.name) + '</td>' +
+        '<td>' + actionButtons('participant', row) + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -158,50 +212,167 @@
     }
     el.sponsorEmpty.hidden = true;
     el.sponsorBody.innerHTML = list.map(function (row) {
+      var invoice = row.status === 'verified' && row.invoice_no ? row.invoice_no : '—';
       return '<tr>' +
-        '<td>' + esc(row.invoice_no) + '</td>' +
+        '<td>' + esc(invoice) + '</td>' +
         '<td>' + esc(row.company) + '</td>' +
         '<td>' + esc(row.pic_name) + '</td>' +
         '<td>' + esc(row.whatsapp) + '</td>' +
         '<td>' + esc(row.package) + '</td>' +
         '<td>' + fmtMoney(row.amount) + '</td>' +
-        '<td>' + attachmentCell(row) + '</td>' +
+        '<td>' + attachmentCell(row, 'sponsor') + '</td>' +
+        '<td>' + statusBadge(row.status) + '</td>' +
         '<td>' + fmtDate(row.created_at) + '</td>' +
-        '<td>' + deleteCell('sponsor', row, row.company) + '</td>' +
+        '<td>' + actionButtons('sponsor', row) + '</td>' +
         '</tr>';
     }).join('');
   }
 
+  function renderQuota() {
+    var earlyVerified = 0;
+    var earlyReserved = 0;
+    var regularVerified = 0;
+    var regularReserved = 0;
+    var codeVerified = 0;
+    var codeReserved = 0;
+    var totalVerified = 0;
+    var totalReserved = 0;
+
+    state.orders.forEach(function (row) {
+      var active = row.status === 'pending' || row.status === 'verified';
+      if (active) {
+        earlyReserved += Number(row.early_bird_qty) || 0;
+        regularReserved += Number(row.regular_qty) || 0;
+        totalReserved += Number(row.quantity) || 0;
+        if (row.discount_code) codeReserved += 1;
+      }
+      if (row.status === 'verified') {
+        earlyVerified += Number(row.early_bird_qty) || 0;
+        regularVerified += Number(row.regular_qty) || 0;
+        totalVerified += Number(row.quantity) || 0;
+        if (row.discount_code) codeVerified += 1;
+      }
+    });
+
+    el.statEarly.textContent = earlyVerified + ' / 200';
+    el.statEarlySub.textContent = earlyReserved + ' tiket terpakai/reserved';
+    el.statRegular.textContent = regularVerified + ' / 300';
+    el.statRegularSub.textContent = regularReserved + ' tiket terpakai/reserved';
+    el.statTotal.textContent = totalVerified + ' / 500';
+    el.statTotalSub.textContent = totalReserved + ' tiket terpakai/reserved';
+
+    if (state.code) {
+      el.statCode.textContent = state.code.code;
+      el.statCodeSub.textContent = codeVerified + ' / ' + state.code.quota_total +
+        ' terverifikasi · ' + Math.max(0, state.code.quota_total - codeReserved) + ' sisa';
+      el.copyCode.hidden = false;
+    } else {
+      el.statCode.textContent = '—';
+      el.statCodeSub.textContent = 'Belum ada kode aktif';
+      el.copyCode.hidden = true;
+    }
+  }
+
   function render() {
     var q = (el.searchInput.value || '').trim().toLowerCase();
-    var participants = state.participants.filter(function (row) { return matches(row, q); });
+    var orders = state.orders.filter(function (row) { return matches(row, q); });
     var sponsors = state.sponsors.filter(function (row) { return matches(row, q); });
-
-    el.statPeserta.textContent = state.participants.length;
-    el.statSponsor.textContent = state.sponsors.length;
-
-    var totalP = state.participants.reduce(function (sum, row) {
-      return sum + (Number(row.nominal_transfer) || 0);
-    }, 0);
-    var totalS = state.sponsors.reduce(function (sum, row) {
-      return sum + (Number(row.amount) || 0);
-    }, 0);
-
-    el.statNominalPeserta.textContent = fmtMoney(totalP);
-    el.statNominalSponsor.textContent = fmtMoney(totalS);
-
-    renderParticipants(participants);
+    renderQuota();
+    renderParticipants(orders);
     renderSponsors(sponsors);
   }
 
-  async function openAttachment(path) {
+  async function openAttachment(kind, id, path) {
     if (!path) return;
+    var rpc = kind === 'sponsor'
+      ? sb.rpc('admin_mark_sponsor_proof_viewed', { p_sponsor_id: id })
+      : sb.rpc('admin_mark_participant_proof_viewed', { p_order_id: id });
+    var mark = await rpc;
+    if (mark.error) {
+      alert('Gagal menandai bukti: ' + mark.error.message);
+      return;
+    }
+    var row = kind === 'sponsor'
+      ? state.sponsors.find(function (r) { return r.id === id; })
+      : state.orders.find(function (r) { return r.id === id; });
+    if (row) row.proof_viewed_at = row.proof_viewed_at || new Date().toISOString();
+    render();
+
     var res = await sb.storage.from('bukti-transfer').createSignedUrl(path, 300);
     if (res.error) {
       alert('Gagal membuka lampiran: ' + res.error.message);
       return;
     }
     window.open(res.data.signedUrl, '_blank', 'noopener');
+  }
+
+  async function verifyRow(type, id) {
+    var rpc = type === 'sponsor'
+      ? sb.rpc('admin_verify_sponsor', { p_sponsor_id: id })
+      : sb.rpc('admin_verify_participant', { p_order_id: id });
+    var res = await rpc;
+    if (res.error) {
+      alert('Gagal memverifikasi: ' + res.error.message);
+      return;
+    }
+    if (!res.data || res.data.ok !== true) {
+      alert((res.data && res.data.error) || 'Gagal memverifikasi.');
+      return;
+    }
+    await loadData();
+  }
+
+  async function rejectRow(type, id) {
+    if (!confirm('Tolak data ini? Kuota yang direservasi akan dikembalikan.')) return;
+    var rpc = type === 'sponsor'
+      ? sb.rpc('admin_reject_sponsor', { p_sponsor_id: id })
+      : sb.rpc('admin_reject_participant', { p_order_id: id });
+    var res = await rpc;
+    if (res.error) {
+      alert('Gagal menolak: ' + res.error.message);
+      return;
+    }
+    if (res.data !== true) {
+      alert('Data tidak dapat ditolak. Mungkin sudah diproses.');
+      return;
+    }
+    await loadData();
+  }
+
+  function participantMessage(order) {
+    var link = location.origin + '/tiket?token=' + encodeURIComponent(order.ticket_token);
+    return 'Bismillah.\n\n' +
+      'Assalamu’alaikum warahmatullahi wabarakatuh.\n\n' +
+      'Halo, Kak ' + order.name + '.\n\n' +
+      'Terima kasih telah menyelesaikan proses registrasi dan pembayaran untuk kegiatan “Muslimah Preneur” bersama Muri Handayani, yang insyaAllah akan dilaksanakan pada:\n\n' +
+      '📅 25 Desember 2026\n\n' +
+      'Pembayaran Kakak telah kami terima. Berikut kami lampirkan tiket sebagai bukti registrasi.\n\n' +
+      'Silakan unduh dan simpan nomor peserta melalui tautan berikut:\n\n' +
+      '🔗 Download Nomor Peserta: ' + link + '\n\n' +
+      'Nomor peserta tersebut harap ditunjukkan kepada panitia saat registrasi ulang di lokasi acara.\n\n' +
+      'Untuk mendapatkan informasi lebih lanjut mengenai kegiatan dan teknis pelaksanaan, silakan bergabung melalui grup WhatsApp peserta berikut:\n\n' +
+      '🔗 Grup WhatsApp: ' + GROUP_LINK + '\n\n' +
+      'Sampai bertemu di kegiatan Muslimah Preneur.\n\n' +
+      'Terima kasih atas partisipasi Kakak.\n\n' +
+      'Wassalamu’alaikum warahmatullahi wabarakatuh.';
+  }
+
+  function sponsorMessage(sponsor) {
+    var link = location.origin + '/invoice?token=' + encodeURIComponent(sponsor.invoice_token);
+    return 'Assalamualaikum Warahmatullahi Wabarakatuh\n\n' +
+      'Atas nama panitia "Muslimah Preneur" kami menyampaikan terima kasih yang sebesar-besarnya kepada ' + sponsor.company + ' atas dukungan, kontribusi, dan kepercayaan yang telah diberikan sebagai sponsor kegiatan kami. Dukungan Anda sangat berarti bagi kelancaran dan kesuksesan acara ini. Semoga kerja sama baik ini dapat terus terjalin dan membawa manfaat bagi kita semua di kesempatan mendatang.\n\n' +
+      'Berikut link invoice Anda:\n' + link + '\n\n' +
+      'jazakumullah khairan wa barakallahu fiikum';
+  }
+
+  function openWhatsApp(type, id) {
+    var row = type === 'sponsor'
+      ? state.sponsors.find(function (r) { return r.id === id; })
+      : state.orders.find(function (r) { return r.id === id; });
+    if (!row) return;
+    var message = type === 'sponsor' ? sponsorMessage(row) : participantMessage(row);
+    var phone = normalizePhone(row.whatsapp);
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(message), '_blank', 'noopener');
   }
 
   async function deleteRow(type, id, path, name) {
@@ -211,7 +382,7 @@
       var rm = await sb.storage.from('bukti-transfer').remove([path]);
       if (rm.error) console.warn('Gagal menghapus lampiran:', rm.error.message);
     }
-    var table = type === 'sponsor' ? 'sponsors' : 'participants';
+    var table = type === 'sponsor' ? 'sponsors' : 'participant_orders';
     var res = await sb.from(table).delete().eq('id', id);
     if (res.error) {
       alert('Gagal menghapus data: ' + res.error.message);
@@ -249,9 +420,35 @@
     el.refreshBtn.addEventListener('click', loadData);
     el.searchInput.addEventListener('input', render);
 
+    el.copyCode.addEventListener('click', function () {
+      if (!state.code || !navigator.clipboard) return;
+      navigator.clipboard.writeText(state.code.code).then(function () {
+        el.copyCode.textContent = '✓ Tersalin';
+        setTimeout(function () { el.copyCode.textContent = 'Salin kode'; }, 1800);
+      });
+    });
+
     document.addEventListener('click', function (e) {
       var att = e.target.closest('.attachment-btn');
-      if (att) { openAttachment(att.getAttribute('data-path')); return; }
+      if (att) {
+        openAttachment(att.getAttribute('data-kind'), att.getAttribute('data-id'), att.getAttribute('data-path'));
+        return;
+      }
+      var verify = e.target.closest('.verify-btn');
+      if (verify) {
+        verifyRow(verify.getAttribute('data-type'), verify.getAttribute('data-id'));
+        return;
+      }
+      var reject = e.target.closest('.reject-btn');
+      if (reject) {
+        rejectRow(reject.getAttribute('data-type'), reject.getAttribute('data-id'));
+        return;
+      }
+      var wa = e.target.closest('.wa-btn');
+      if (wa) {
+        openWhatsApp(wa.getAttribute('data-type'), wa.getAttribute('data-id'));
+        return;
+      }
       var del = e.target.closest('.delete-btn');
       if (del) {
         deleteRow(del.getAttribute('data-type'), del.getAttribute('data-id'), del.getAttribute('data-path'), del.getAttribute('data-name'));

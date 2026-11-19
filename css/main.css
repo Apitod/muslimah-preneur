@@ -822,3 +822,8 @@ footer a:hover{color:var(--wood)}
   .divider,.divider.in{width:76px!important}
   .orb,.ring{display:none}
 }
+
+.tier-reguler .tier-left{background:var(--cream-2);border-right-color:var(--cream-3)}
+.tier-reguler .tier-name{color:var(--maroon)}
+.tier-reguler .tier-price{color:var(--olive)}
+.tier-reguler .tier-ticket{color:var(--maroon);border-color:var(--cream-3);background:var(--white)}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#4A1521">
+<title>Tiket Peserta — Muslimah Preneur</title>
+
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tiket.css?v=20261123">
+</head>
+<body>
+
+<header class="ticket-header">
+  <a href="index.html" class="ticket-back">← Beranda</a>
+  <a href="index.html" class="ticket-logo" aria-label="MQ Aaminah">
+    <img src="assets/logo.webp" alt="MQ Aaminah #temanngajimu" width="1000" height="267">
+  </a>
+  <span class="ticket-header-title">Tiket Peserta</span>
+</header>
+
+<main class="ticket-main">
+  <section class="ticket-hero">
+    <p class="kicker">Muslimah Preneur</p>
+    <h1 id="ticketTitle">Memuat tiket…</h1>
+    <p class="ticket-sub" id="ticketSub">Mohon tunggu sebentar.</p>
+  </section>
+
+  <section class="ticket-panel" id="ticketPanel" hidden>
+    <div class="ticket-actions">
+      <a class="btn btn-primary" id="downloadAll" href="#" download>⤓ Download Semua Tiket</a>
+      <a class="btn btn-wa" id="groupLink" href="https://chat.whatsapp.com/CNjoFu56cYd4HU7vd50cnf?s=sw&p=i&iam=2" target="_blank" rel="noopener noreferrer">Gabung Grup WhatsApp Peserta</a>
+    </div>
+    <p class="ticket-help">Tunjukkan tiket ini kepada panitia saat registrasi ulang di lokasi acara.</p>
+    <div class="ticket-list" id="ticketList"></div>
+  </section>
+
+  <section class="ticket-empty" id="ticketEmpty" hidden>
+    <h2>Tiket belum tersedia</h2>
+    <p id="emptyText">Tiket akan tersedia setelah admin memverifikasi pembayaran Anda.</p>
+    <p>Jika ada kendala, hubungi <strong>Frista</strong> · <a href="https://wa.me/62895801073774" target="_blank" rel="noopener noreferrer">+62 895-8010-73774</a>.</p>
+  </section>
+</main>
+
+<footer class="ticket-footer">
+  <p>Muslimah Preneur · MQ Aaminah × Daarul Ilmil Karimi</p>
+  <p>© 2026 MQ Aaminah</p>
+</footer>
+
+<script src="js/tiket.js?v=20261123" defer></script>
+</body>
+</html>

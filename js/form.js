@@ -91,6 +91,20 @@
     return { path: body.path, name: file.name };
   }
 
+  var PACKAGE_PRICES = {
+    Platinum: 5000000,
+    Gold: 3000000,
+    Silver: 2500000,
+    Reguler: 500000
+  };
+
+  function syncTransferAmount() {
+    var selected = document.querySelector('input[name="paket"]:checked');
+    var input = document.getElementById('jumlah_transfer');
+    if (!selected || !input) return;
+    input.value = formatRupiah(String(PACKAGE_PRICES[selected.value] || ''));
+  }
+
   /* ── FORM CARDS ANIMATE IN ── */
   function animateCards() {
     if (!window.IntersectionObserver) {
@@ -119,6 +133,7 @@
         opt.classList.add('selected');
         opt.querySelector('input[type=radio]').checked = true;
         clearError('paket');
+        syncTransferAmount();
         // ripple
         var r = document.createElement('span');
         r.style.cssText = 'position:absolute;border-radius:50%;background:rgba(235,214,183,.32);width:8px;height:8px;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);animation:ripple .5s ease both;pointer-events:none';
@@ -132,8 +147,11 @@
     // preselect from ?paket=platinum|gold|silver
     var want = new URLSearchParams(location.search).get('paket');
     if (want) {
-      var hit = document.getElementById('opt-' + want.slice(0, 4));
+      var aliases = { platinum: 'opt-plat', gold: 'opt-gold', silver: 'opt-silv', reguler: 'opt-regu', regular: 'opt-regu' };
+      var hit = document.getElementById(aliases[want.toLowerCase()] || '');
       if (hit) hit.click();
+    } else {
+      syncTransferAmount();
     }
     // add ripple keyframes once
     if (!document.getElementById('ripple-style')) {
@@ -218,6 +236,9 @@
     ].forEach(function (f) {
       if (!val(f.id)) { setError(f.id, f.msg); ok = false; }
     });
+    var fileInput = document.getElementById('bukti_transfer');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) { setError('bukti_transfer', 'Bukti transfer wajib diunggah.'); ok = false; }
     return ok;
   }
 
@@ -451,8 +472,6 @@
     var form = document.getElementById('sponsorForm');
     var success = document.getElementById('successScreen');
     var submitBtn = document.getElementById('submitBtn');
-    var invoiceImg = document.getElementById('invoiceImg');
-    var invoiceDownload = document.getElementById('invoiceDownload');
     var formStatus = document.getElementById('formStatus');
     var thanksOverlay = document.getElementById('thanksOverlay');
     if (!form) return;
@@ -461,6 +480,13 @@
       el.addEventListener('input', function () { clearError(el.id); });
       el.addEventListener('change', function () { clearError(el.id); });
     });
+
+    var amountInput = document.getElementById('jumlah_transfer');
+    if (amountInput) {
+      amountInput.readOnly = true;
+      amountInput.setAttribute('aria-readonly', 'true');
+    }
+    syncTransferAmount();
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -506,13 +532,7 @@
         }
         setStatus(formStatus, 'Menyimpan data pendaftaran...', 'info');
         var result = await postRegistration(data);
-        if (!result.invoiceNo) throw new Error('Nomor invoice tidak diterima dari server.');
-        var invoiceNo = String(result.invoiceNo);
-        var dataURL = await makeInvoice(data, invoiceNo);
-
-        invoiceImg.src = dataURL;
-        invoiceDownload.href = dataURL;
-        invoiceDownload.setAttribute('download', 'Invoice-Sponsorship-' + invoiceNo + '.png');
+        if (!result.sponsorId) throw new Error('Pendaftaran sponsor tidak diterima dari server.');
         setStatus(formStatus, '', '');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;

@@ -1,8 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const BUCKET = 'bukti-transfer';
-const EARLY_BIRD_END = new Date('2026-11-30T23:59:59+08:00').getTime();
 const MAX_FIELD = 500;
+const PACKAGES = {
+  platinum: { label: 'Platinum', price: 5000000 },
+  gold: { label: 'Gold', price: 3000000 },
+  silver: { label: 'Silver', price: 2500000 },
+  reguler: { label: 'Reguler', price: 500000 }
+};
 
 function clean(value, max) {
   if (value === undefined || value === null) return '';
@@ -29,6 +34,15 @@ function isEmail(value) {
 function validAttachment(path, type) {
   if (!path) return true;
   return new RegExp('^' + type + '/[a-z0-9-]+\\.[a-z0-9]+$', 'i').test(path);
+}
+
+function normalizePackage(value) {
+  const key = clean(value, 100).toLowerCase();
+  if (key.includes('platinum')) return PACKAGES.platinum;
+  if (key.includes('gold')) return PACKAGES.gold;
+  if (key.includes('silver')) return PACKAGES.silver;
+  if (key.includes('reguler') || key.includes('regular')) return PACKAGES.reguler;
+  return null;
 }
 
 module.exports = async function handler(req, res) {
@@ -63,58 +77,71 @@ module.exports = async function handler(req, res) {
     const whatsapp = clean(body.whatsapp, 30).replace(/[^\d+]/g, '');
     const kategori = clean(body.kategori, 100);
     const aaminah = clean(body.aminah, 100);
-    const email = clean(body.email, 200);
-    const earlyBird = Date.now() <= EARLY_BIRD_END;
-    let nominal = 0;
-    if (kategori === 'Muslimah DIK' || kategori === 'Umum') {
-      nominal = earlyBird ? 175000 : 200000;
-    }
+    const quantity = Number(body.quantity || 1);
+    const code = clean(body.code, 50).toUpperCase();
+    const expectedTotal = toAmount(body.expected_total);
     const attachmentPath = clean(body.attachment_path, 500);
     const attachmentName = clean(body.attachment_name, 255);
 
     if (!nama || !whatsapp || !kategori) {
       return send(res, 400, { ok: false, error: 'Data peserta belum lengkap.' });
     }
-    if (!nominal) {
+    if (!['MQ Aaminah', 'Selain MQ Aaminah_DIK'].includes(kategori)) {
       return send(res, 400, { ok: false, error: 'Kategori peserta tidak valid.' });
     }
-    if (kategori === 'Muslimah DIK' && !aaminah) {
+    if (kategori === 'MQ Aaminah' && !aaminah) {
       return send(res, 400, { ok: false, error: 'Aaminah wajib diisi.' });
     }
-    if (email && !isEmail(email)) {
-      return send(res, 400, { ok: false, error: 'Format email tidak valid.' });
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 5) {
+      return send(res, 400, { ok: false, error: 'Jumlah tiket harus 1 sampai 5.' });
     }
-    if (!validAttachment(attachmentPath, 'peserta')) {
-      return send(res, 400, { ok: false, error: 'Lampiran tidak valid.' });
+    if (kategori === 'MQ Aaminah' && quantity !== 1) {
+      return send(res, 400, { ok: false, error: 'Kategori MQ Aaminah hanya 1 tiket per order.' });
+    }
+    if (!attachmentPath || !validAttachment(attachmentPath, 'peserta')) {
+      return send(res, 400, { ok: false, error: 'Bukti transfer wajib diunggah.' });
     }
 
-    const { data, error } = await supabase
-      .from('participants')
-      .insert({
+    const { data, error } = await supabase.rpc('create_participant_order', {
+      payload: {
         name: nama,
         whatsapp: whatsapp,
         category: kategori,
-        aaminah: aaminah || null,
-        email: email || null,
-        nominal_transfer: nominal,
-        attachment_path: attachmentPath || null,
-        attachment_name: attachmentName || null
-      })
-      .select('ticket_no')
-      .single();
+        aaminah: kategori === 'MQ Aaminah' ? aaminah : '',
+        quantity: quantity,
+        code: kategori === 'MQ Aaminah' ? code : '',
+        expected_total: expectedTotal || null,
+        attachment_path: attachmentPath,
+        attachment_name: attachmentName
+      }
+    });
 
     if (error) {
-      if (attachmentPath) {
-        await supabase.storage.from(BUCKET).remove([attachmentPath]);
-      }
+      await supabase.storage.from(BUCKET).remove([attachmentPath]);
       return send(res, 502, { ok: false, error: 'Gagal menyimpan pendaftaran.' });
     }
+    if (!data || data.ok !== true) {
+      await supabase.storage.from(BUCKET).remove([attachmentPath]);
+      return send(res, 409, {
+        ok: false,
+        error: (data && data.error) || 'Pendaftaran gagal disimpan.',
+        pricing: data && data.pricing ? data.pricing : null
+      });
+    }
 
-    return send(res, 200, { ok: true, ticketNo: data.ticket_no });
+    return send(res, 200, {
+      ok: true,
+      orderNo: data.orderNo,
+      total: data.total,
+      earlyBirdQty: data.earlyBirdQty,
+      regularQty: data.regularQty,
+      discountAmount: data.discountAmount,
+      status: data.status
+    });
   }
 
   if (type === 'sponsor') {
-    const paket = clean(body.paket, 100);
+    const pkg = normalizePackage(body.paket);
     const company = clean(body.nama_perusahaan, 200);
     const businessField = clean(body.bidang_usaha, 200);
     const address = clean(body.alamat);
@@ -127,20 +154,23 @@ module.exports = async function handler(req, res) {
     const attachmentPath = clean(body.attachment_path, 500);
     const attachmentName = clean(body.attachment_name, 255);
 
-    if (!paket || !company || !businessField || !picName || !whatsapp || !transferName || amount <= 0) {
+    if (!pkg || !company || !businessField || !picName || !whatsapp || !transferName) {
       return send(res, 400, { ok: false, error: 'Data sponsor belum lengkap.' });
     }
     if (email && !isEmail(email)) {
       return send(res, 400, { ok: false, error: 'Format email tidak valid.' });
     }
-    if (!validAttachment(attachmentPath, 'sponsor')) {
-      return send(res, 400, { ok: false, error: 'Lampiran tidak valid.' });
+    if (!attachmentPath || !validAttachment(attachmentPath, 'sponsor')) {
+      return send(res, 400, { ok: false, error: 'Bukti transfer wajib diunggah.' });
+    }
+    if (amount && amount !== pkg.price) {
+      return send(res, 400, { ok: false, error: 'Jumlah transfer harus Rp ' + pkg.price.toLocaleString('id-ID') + '.' });
     }
 
     const { data, error } = await supabase
       .from('sponsors')
       .insert({
-        package: paket,
+        package: pkg.label,
         company: company,
         business_field: businessField,
         address: address || null,
@@ -149,21 +179,20 @@ module.exports = async function handler(req, res) {
         whatsapp: whatsapp,
         email: email || null,
         transfer_name: transferName,
-        amount: amount,
-        attachment_path: attachmentPath || null,
-        attachment_name: attachmentName || null
+        amount: pkg.price,
+        attachment_path: attachmentPath,
+        attachment_name: attachmentName || null,
+        status: 'pending'
       })
-      .select('invoice_no')
+      .select('id')
       .single();
 
     if (error) {
-      if (attachmentPath) {
-        await supabase.storage.from(BUCKET).remove([attachmentPath]);
-      }
+      await supabase.storage.from(BUCKET).remove([attachmentPath]);
       return send(res, 502, { ok: false, error: 'Gagal menyimpan pendaftaran.' });
     }
 
-    return send(res, 200, { ok: true, invoiceNo: data.invoice_no });
+    return send(res, 200, { ok: true, sponsorId: data.id, status: 'pending' });
   }
 
   return send(res, 400, { ok: false, error: 'Tipe pendaftaran tidak valid.' });

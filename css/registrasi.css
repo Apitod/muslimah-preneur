@@ -596,3 +596,42 @@ ul,ol{list-style:none}
   padding:3px 0;transition:opacity .2s,color .2s;
 }
 .pay-copy:hover{opacity:.7;color:#000}
+
+/* ── PRICE SUMMARY ── */
+.price-summary{
+  border:1px solid rgba(235,214,183,.28);
+  background:rgba(235,214,183,.08);
+  border-radius:4px;padding:16px 18px;
+}
+.price-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.price-label{
+  font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--wood-dark);font-weight:600;
+}
+.price-value{
+  font-family:var(--serif);font-weight:400;font-size:1.45rem;
+  color:var(--cream);line-height:1.2;
+}
+.price-detail{
+  margin-top:6px;font-size:.78rem;line-height:1.6;
+  color:rgba(239,237,227,.72);
+}
+
+/* ── REGISTRATION SUCCESS ── */
+.reg-success{
+  margin-top:34px;text-align:center;
+  padding:clamp(36px,6vw,58px) clamp(18px,4vw,32px);
+  border:1px solid rgba(235,214,183,.28);
+  background:rgba(255,255,255,.045);
+  border-radius:5px;
+  animation:fadeUp .7s var(--ease) both;
+}
+.reg-success .chapter-label{justify-content:center}
+.reg-success .chapter-title{color:var(--cream);margin-bottom:12px}
+.reg-success .lead{color:rgba(239,237,227,.82);margin-bottom:12px}
+.reg-success-text{
+  max-width:58ch;margin:0 auto 10px;
+  font-size:.88rem;line-height:1.75;color:rgba(239,237,227,.72);
+}
+.reg-success-text a{color:var(--wood);border-bottom:1px solid rgba(235,214,183,.45)}
+.reg-success .reset-link{margin-top:22px}

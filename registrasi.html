@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/registrasi.css?v=20261122">
+<link rel="stylesheet" href="css/registrasi.css?v=20261123">
 <script>document.documentElement.classList.add('js');</script>
 </head>
 <body class="reg-page">
@@ -47,23 +47,28 @@
     <div class="center" id="daftarIntro">
       <p class="chapter-label">Pendaftaran</p>
       <h2 class="chapter-title">Daftar Kehadiran</h2>
-      <p class="lead">Isi data berikut untuk mendapatkan tiket digital Anda. Tiket dibuat otomatis dan dapat diunduh setelah pendaftaran tersimpan.</p>
+      <p class="lead">Isi data berikut untuk mengamankan slot. Tiket dibuat setelah admin memverifikasi pembayaran.</p>
     </div>
 
     <ul class="ticket-info" aria-label="Informasi tiket">
       <li>
         <span class="ticket-info-badge">Early Bird</span>
         <strong>Rp 175.000</strong>
-        <span class="ticket-info-date">16 – 30 November 2026</span>
+        <span class="ticket-info-date">Kuota 200 tiket · semua kategori</span>
       </li>
       <li>
-        <span class="ticket-info-badge">Tiket Umum</span>
+        <span class="ticket-info-badge">Setelah Kuota Penuh</span>
         <strong>Rp 200.000</strong>
-        <span class="ticket-info-date">1 – 24 Desember 2026</span>
+        <span class="ticket-info-date">Berlaku semua kategori</span>
+      </li>
+      <li>
+        <span class="ticket-info-badge">Kode Diskon</span>
+        <strong>Rp 150.000</strong>
+        <span class="ticket-info-date">Khusus MQ Aaminah · kuota 150</span>
       </li>
     </ul>
 
-    <p class="reg-help">Butuh bantuan pendaftaran? Hubungi <strong>Frista</strong> · <a href="https://wa.me/6285343723889" target="_blank" rel="noopener noreferrer">0853 4372 3889</a></p>
+    <p class="reg-help">Butuh bantuan pendaftaran? Hubungi <strong>Frista</strong> · <a href="https://wa.me/62895801073774" target="_blank" rel="noopener noreferrer">+62 895-8010-73774</a></p>
 
     <form id="hadirForm" class="reg-form" novalidate>
       <div class="form-card">
@@ -85,22 +90,31 @@
               <label for="kategori">Kategori Peserta <span aria-hidden="true">*</span></label>
               <select id="kategori" name="kategori" required>
                 <option value="">Pilih kategori</option>
-                <option value="Muslimah DIK">Muslimah DIK</option>
-                <option value="Umum">Umum</option>
+                <option value="MQ Aaminah">MQ Aaminah</option>
+                <option value="Selain MQ Aaminah_DIK">Selain MQ Aaminah_DIK</option>
               </select>
               <span class="err" id="kategori-error" role="alert"></span>
             </div>
           </div>
 
           <div class="field" id="aminahField" hidden>
-            <input type="text" id="aminah_ke" name="aminah_ke" placeholder="Aaminah 1" aria-label="Aaminah">
+            <label for="aminah_ke">Aaminah <span aria-hidden="true">*</span></label>
+            <input type="text" id="aminah_ke" name="aminah_ke" placeholder="Aaminah 1">
             <span class="err" id="aminah_ke-error" role="alert"></span>
           </div>
 
-          <div class="field">
-            <label for="email">Email <span class="opt">(opsional)</span></label>
-            <input type="email" id="email" name="email" placeholder="email@contoh.com" autocomplete="email">
-            <span class="err" id="email-error" role="alert"></span>
+          <div class="field" id="codeField" hidden>
+            <label for="kode_diskon">Kode Diskon <span class="opt">(opsional)</span></label>
+            <input type="text" id="kode_diskon" name="kode_diskon" placeholder="Masukkan kode dari admin" autocomplete="off">
+            <span class="err" id="kode_diskon-error" role="alert"></span>
+            <span class="field-hint" id="codeHint">Kode hanya berlaku untuk MQ Aaminah selama kuota early bird tersedia.</span>
+          </div>
+
+          <div class="field" id="qtyField" hidden>
+            <label for="jumlah_tiket">Jumlah Tiket <span aria-hidden="true">*</span></label>
+            <input type="number" id="jumlah_tiket" name="jumlah_tiket" min="1" max="5" step="1" value="1" inputmode="numeric">
+            <span class="err" id="jumlah_tiket-error" role="alert"></span>
+            <span class="field-hint">Maksimal 5 tiket per order. Setiap tiket mendapat nomor unik.</span>
           </div>
 
           <div class="pay-info">
@@ -113,42 +127,36 @@
             </div>
           </div>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="nominal_transfer">Nominal Transfer</label>
-              <select id="nominal_transfer" name="nominal_transfer" disabled>
-                <option value="">Pilih kategori</option>
-                <option value="175.000">175.000</option>
-                <option value="200.000">200.000</option>
-              </select>
-              <span class="err" id="nominal_transfer-error" role="alert"></span>
+          <div class="price-summary" id="priceSummary" aria-live="polite">
+            <div>
+              <span class="price-label">Total Transfer</span>
+              <strong class="price-value" id="totalTransfer">Rp 0</strong>
             </div>
-            <div class="field">
-              <label for="bukti_transfer">Bukti Transfer <span class="opt">(opsional)</span></label>
-              <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" aria-label="Bukti transfer">
-            </div>
+            <p class="price-detail" id="priceDetail">Pilih kategori untuk melihat harga.</p>
+            <p class="price-detail" id="quotaDetail"></p>
           </div>
-          <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Nominal otomatis sesuai kategori. Mohon melampirkan struk dan bukti transfer berhasil.</p>
 
-          <p class="form-note">Data Anda disimpan untuk keperluan acara. Tiket dibuat setelah data tersimpan.</p>
+          <div class="field">
+            <label for="bukti_transfer">Bukti Transfer <span aria-hidden="true">*</span></label>
+            <input type="file" id="bukti_transfer" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" required aria-label="Bukti transfer">
+            <span class="err" id="bukti_transfer-error" role="alert"></span>
+          </div>
+          <p class="field-hint">Format JPG, PNG, atau PDF · Maks. 5 MB. Mohon lampirkan struk dan bukti transfer berhasil.</p>
+
+          <p class="form-note">Data Anda disimpan untuk keperluan acara. Tiket dibuat setelah admin memverifikasi pembayaran.</p>
           <p class="form-status" id="formStatus" role="alert"></p>
-          <button type="submit" class="btn btn-gold btn-block" id="submitBtn">Daftar &amp; Buat Tiket</button>
+          <button type="submit" class="btn btn-gold btn-block" id="submitBtn">Daftar &amp; Amankan Slot</button>
         </div>
       </div>
     </form>
 
-    <div class="ticket-zone" id="ticketZone" aria-live="polite" hidden>
-      <div class="center">
-        <p class="chapter-label">Pendaftaran Berhasil</p>
-        <h2 class="chapter-title">Jazakumullahu Khairan!</h2>
-        <p class="lead">Tiket digital Anda sudah siap. Unduh dan simpan tiket di bawah ini.</p>
-      </div>
-      <div class="ticket-preview">
-        <img id="ticketImg" alt="Tiket peserta Muslimah Preneur">
-      </div>
-      <div class="ticket-actions">
-        <a id="downloadBtn" class="btn btn-gold" download>⤓ Download Tiket</a>
-      </div>
+    <div class="reg-success" id="regSuccess" aria-live="polite" hidden>
+      <div class="thanks-icon" aria-hidden="true">✓</div>
+      <p class="chapter-label">Pendaftaran Berhasil</p>
+      <h2 class="chapter-title">Jazakumullahu Khairan!</h2>
+      <p class="lead">Order <strong id="successOrderNo">—</strong> sudah kami terima.</p>
+      <p class="reg-success-text">Pembayaran Anda sedang menunggu verifikasi admin. Tiket akan dikirim melalui WhatsApp setelah pembayaran diverifikasi.</p>
+      <p class="reg-success-text">Jika ada kendala, hubungi <strong>Frista</strong> · <a href="https://wa.me/62895801073774" target="_blank" rel="noopener noreferrer">+62 895-8010-73774</a>.</p>
       <button type="button" class="reset-link" id="resetBtn">Daftarkan peserta lain</button>
     </div>
   </div>
@@ -169,17 +177,8 @@
   <p class="f-copy">© 2026 MQ Aaminah. Seluruh hak cipta dilindungi.</p>
 </footer>
 
-<div class="thanks-overlay" id="thanksOverlay" role="status" aria-live="polite" hidden>
-  <div class="thanks-card">
-    <div class="thanks-icon" aria-hidden="true">✓</div>
-    <p class="thanks-kicker">Pendaftaran Berhasil</p>
-    <h2 class="thanks-title">Terima kasih sudah mendaftar!</h2>
-    <p class="thanks-sub">Tiket digital Anda sedang disiapkan…</p>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-<script src="js/registrasi.js?v=20261122" defer></script>
+<script src="js/registrasi.js?v=20261123" defer></script>
 </body>
 </html>

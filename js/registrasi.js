@@ -2,12 +2,23 @@
   'use strict';
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var EARLY_BIRD_END = new Date('2026-11-30T23:59:59+08:00').getTime();
+  var info = {
+    earlyBirdRemaining: 200,
+    regularRemaining: 300,
+    earlyBirdPrice: 175000,
+    regularPrice: 200000,
+    codeRemaining: 0,
+    codeActive: false,
+    closed: false
+  };
+  var codeState = { checked: false, valid: false, discount: 0 };
+  var currentTotal = 0;
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
   function normalizePhone(v) { return v.replace(/[^\d]/g, ''); }
+  function formatRp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
 
   function getSupabase() {
     if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || !window.supabase) return null;
@@ -48,24 +59,13 @@
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (body) {
         if (!res.ok || !body.ok) {
-          throw new Error(body.error || 'Pendaftaran gagal disimpan.');
+          var err = new Error(body.error || 'Pendaftaran gagal disimpan.');
+          err.pricing = body.pricing || null;
+          throw err;
         }
         return body;
       });
     });
-  }
-
-  function showThanks(overlay, done) {
-    if (!overlay) { done(); return; }
-    overlay.hidden = false;
-    requestAnimationFrame(function () { overlay.classList.add('show'); });
-    var short = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var hold = short ? 450 : 1800;
-    var fade = short ? 40 : 350;
-    setTimeout(function () {
-      overlay.classList.remove('show');
-      setTimeout(function () { overlay.hidden = true; done(); }, fade);
-    }, hold);
   }
 
   function initProgress() {
@@ -133,250 +133,191 @@
     $$('.field input, .field select').forEach(function (el) { el.classList.remove('error'); });
   }
 
-  function validate() {
-    var ok = true;
-    if (val('nama').length < 2) { setErr('nama', 'Nama lengkap wajib diisi.'); ok = false; }
-    var phone = normalizePhone(val('whatsapp'));
-    if (!/^[0-9]{9,15}$/.test(phone)) { setErr('whatsapp', 'Nomor WhatsApp tidak valid.'); ok = false; }
-    if (!val('kategori')) {
-      setErr('kategori', 'Pilih kategori peserta.'); ok = false;
-    } else if (val('kategori') === 'Muslimah DIK' && !val('aminah_ke')) {
-      setErr('aminah_ke', 'Aaminah wajib diisi.'); ok = false;
-    }
-    var email = val('email');
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('email', 'Format email tidak valid.'); ok = false; }
-    if (val('kategori') && !val('nominal_transfer')) { setErr('nominal_transfer', 'Nominal transfer belum terisi.'); ok = false; }
-    return ok;
-  }
-
-  function loadImg(src) {
-    return new Promise(function (resolve, reject) {
-      var img = new Image();
-      img.onload = function () { resolve(img); };
-      img.onerror = reject;
-      img.src = src;
+  function initCopyRek() {
+    var btn = document.getElementById('copyRek');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText('2137416261').then(function () {
+        btn.textContent = '✓ Disalin!';
+        setTimeout(function () { btn.textContent = 'Salin Nomor'; }, 2000);
+      });
     });
-  }
-
-  function hexPath(ctx, cx, cy, r) {
-    ctx.beginPath();
-    for (var i = 0; i < 6; i++) {
-      var angle = Math.PI / 3 * i + Math.PI / 6;
-      var px = cx + r * Math.cos(angle);
-      var py = cy + r * Math.sin(angle);
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-  }
-
-  function drawPattern(ctx, width, height) {
-    ctx.save();
-    ctx.strokeStyle = '#56582C';
-    ctx.globalAlpha = 0.06;
-    ctx.lineWidth = 1.2;
-    var r = 30;
-    var step = r * 1.75;
-    var row = 0;
-    for (var y = -step; y < height + step; y += step * 0.86, row++) {
-      var offset = (row % 2) ? step / 2 : 0;
-      for (var x = -step; x < width + step; x += step) {
-        hexPath(ctx, x + offset, y, r);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
-  }
-
-  function dashedLine(ctx, x1, y1, x2, y2) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(74,21,33,.28)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([10, 12]);
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function fitFont(ctx, text, maxWidth, startSize, tmpl, minSize) {
-    var size = startSize;
-    minSize = minSize || 18;
-    while (size > minSize) {
-      ctx.font = tmpl.replace('{s}', size);
-      if (ctx.measureText(text).width <= maxWidth) break;
-      size -= 2;
-    }
-    ctx.font = tmpl.replace('{s}', size);
-    return size;
-  }
-
-  async function makeTicket(data, code) {
-    if (document.fonts && document.fonts.load) {
-      try {
-        await Promise.all([
-          document.fonts.load('400 82px "Playfair Display"'),
-          document.fonts.load('italic 26px Lora'),
-          document.fonts.load('600 32px Lora'),
-          document.fonts.load('700 38px Lora')
-        ]);
-      } catch (err) {}
-    }
-    if (document.fonts && document.fonts.ready) {
-      try { await document.fonts.ready; } catch (err) {}
-    }
-
-    var W = 1080, H = 1400, M = 52;
-    var canvas = document.createElement('canvas');
-    canvas.width = W;
-    canvas.height = H;
-    var ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'alphabetic';
-
-    ctx.fillStyle = '#EFEDE3';
-    ctx.fillRect(0, 0, W, H);
-    drawPattern(ctx, W, H);
-
-    ctx.strokeStyle = 'rgba(74,21,33,.35)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(M, M, W - M * 2, H - M * 2);
-
-    ctx.fillStyle = '#4A1521';
-    ctx.fillRect(M, M, W - M * 2, 250);
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#EBD6B7';
-    ctx.font = '600 34px Lora, Georgia, serif';
-    ctx.fillText('TIKET PESERTA', W / 2, M + 82);
-
-    ctx.strokeStyle = 'rgba(235,214,183,.45)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(W / 2 - 60, M + 130);
-    ctx.lineTo(W / 2 + 60, M + 130);
-    ctx.stroke();
-
-    ctx.fillStyle = '#EBD6B7';
-    ctx.font = '15px Lora, Georgia, serif';
-    ctx.fillText('MQ AAMINAH  ×  DAARUL ILMIL KARIMI', W / 2, M + 176);
-
-    var logo = await loadImg('assets/logo.webp');
-    var lw = 330;
-    var lh = lw * logo.height / logo.width;
-    var logoY = M + 250 + 54;
-    ctx.drawImage(logo, (W - lw) / 2, logoY, lw, lh);
-
-    var y = logoY + lh;
-
-    ctx.fillStyle = '#4A1521';
-    ctx.font = '400 82px "Playfair Display", Georgia, serif';
-    ctx.fillText('Muslimah Preneur', W / 2, y + 92);
-
-    ctx.fillStyle = '#56582C';
-    ctx.font = 'italic 26px Lora, Georgia, serif';
-    ctx.fillText('Think Beyond, Empowering Self, Enriching Ummah', W / 2, y + 138);
-
-    dashedLine(ctx, W / 2 - 380, y + 196, W / 2 + 380, y + 196);
-
-    ctx.fillStyle = '#6E6857';
-    ctx.font = '600 19px Lora, Georgia, serif';
-    ctx.fillText('NAMA PESERTA', W / 2, y + 262);
-
-    ctx.fillStyle = '#4A1521';
-    fitFont(ctx, data.nama, 880, 56, '400 {s}px "Playfair Display", Georgia, serif', 28);
-    ctx.fillText(data.nama, W / 2, y + 326);
-
-    dashedLine(ctx, W / 2 - 380, y + 374, W / 2 + 380, y + 374);
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#6E6857';
-    ctx.font = '600 20px Lora, Georgia, serif';
-    ctx.fillText('NO. TIKET', 140, y + 430);
-    ctx.fillText('KATEGORI', 620, y + 430);
-
-    ctx.fillStyle = '#4A1521';
-    ctx.font = '700 50px Lora, Georgia, serif';
-    ctx.fillText(code, 140, y + 484);
-
-    var kategoriDisplay = data.kategori + (data.aminah ? ' · ' + data.aminah : '');
-    fitFont(ctx, kategoriDisplay, 360, 40, '600 {s}px "Playfair Display", Georgia, serif', 18);
-    ctx.fillStyle = '#4A1521';
-    ctx.fillText(kategoriDisplay, 620, y + 482);
-
-    dashedLine(ctx, W / 2 - 380, y + 526, W / 2 + 380, y + 526);
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#6E6857';
-    ctx.font = '600 17px Lora, Georgia, serif';
-    ctx.fillText('TANGGAL', W / 2, y + 582);
-
-    ctx.fillStyle = '#4A1521';
-    ctx.font = '400 42px "Playfair Display", Georgia, serif';
-    ctx.fillText("Jum'at, 25 Desember 2026", W / 2, y + 634);
-
-    ctx.fillStyle = '#6E6857';
-    ctx.font = '600 17px Lora, Georgia, serif';
-    ctx.fillText('LOKASI', W / 2, y + 686);
-
-    ctx.fillStyle = '#4A1521';
-    fitFont(ctx, 'Max Ballroom · Hotel Maxone Makassar', 900, 32, '400 {s}px "Playfair Display", Georgia, serif', 20);
-    ctx.fillText('Max Ballroom · Hotel Maxone Makassar', W / 2, y + 730);
-
-    ctx.fillStyle = '#4A1521';
-    ctx.fillRect(M, H - M - 108, W - M * 2, 108);
-
-    ctx.fillStyle = '#EBD6B7';
-    ctx.font = '600 21px Lora, Georgia, serif';
-    ctx.fillText('Tunjukkan tiket ini saat registrasi ulang di lokasi acara', W / 2, H - M - 60);
-
-    ctx.fillStyle = 'rgba(235,214,183,.68)';
-    ctx.font = 'italic 18px Lora, Georgia, serif';
-    ctx.fillText('MQ Aaminah × Daarul Ilmil Karimi · 2026', W / 2, H - M - 26);
-
-    return canvas.toDataURL('image/png');
   }
 
   function initForm() {
     var form = document.getElementById('hadirForm');
     if (!form) return;
 
-    var ticketZone = document.getElementById('ticketZone');
-    var ticketImg = document.getElementById('ticketImg');
-    var downloadBtn = document.getElementById('downloadBtn');
     var submitBtn = document.getElementById('submitBtn');
     var formStatus = document.getElementById('formStatus');
-    var thanksOverlay = document.getElementById('thanksOverlay');
     var resetBtn = document.getElementById('resetBtn');
     var daftarIntro = document.getElementById('daftarIntro');
+    var successPanel = document.getElementById('regSuccess');
+    var successOrderNo = document.getElementById('successOrderNo');
     var kategoriEl = document.getElementById('kategori');
     var aminahField = document.getElementById('aminahField');
     var aminahInput = document.getElementById('aminah_ke');
-    var nominalInput = document.getElementById('nominal_transfer');
+    var codeField = document.getElementById('codeField');
+    var codeInput = document.getElementById('kode_diskon');
+    var codeHint = document.getElementById('codeHint');
+    var qtyField = document.getElementById('qtyField');
+    var qtyInput = document.getElementById('jumlah_tiket');
+    var totalEl = document.getElementById('totalTransfer');
+    var priceDetail = document.getElementById('priceDetail');
+    var quotaDetail = document.getElementById('quotaDetail');
+    var buktiInput = document.getElementById('bukti_transfer');
 
-    function toggleAminah() {
-      if (!aminahField) return;
-      var show = !!(kategoriEl && kategoriEl.value === 'Muslimah DIK');
-      aminahField.hidden = !show;
-      if (!show) {
-        if (aminahInput) aminahInput.value = '';
-        clearErr('aminah_ke');
-      }
+    function quantity() {
+      var n = parseInt(qtyInput && qtyInput.value, 10);
+      if (!Number.isFinite(n)) n = 1;
+      n = Math.max(1, Math.min(5, n));
+      if (qtyInput) qtyInput.value = String(n);
+      return n;
     }
 
-    function syncNominal() {
-      if (!nominalInput) return;
+    function syncVisibility() {
       var kategori = kategoriEl ? kategoriEl.value : '';
-      if (!kategori) { nominalInput.value = ''; return; }
-      nominalInput.value = Date.now() <= EARLY_BIRD_END ? '175.000' : '200.000';
+      var isAminah = kategori === 'MQ Aaminah';
+      var isBulk = kategori === 'Selain MQ Aaminah_DIK';
+      if (aminahField) aminahField.hidden = !isAminah;
+      if (codeField) codeField.hidden = !isAminah;
+      if (qtyField) qtyField.hidden = !isBulk;
+      if (!isAminah) {
+        if (aminahInput) aminahInput.value = '';
+        if (codeInput) codeInput.value = '';
+        codeState = { checked: false, valid: false, discount: 0 };
+        clearErr('aminah_ke');
+        clearErr('kode_diskon');
+      }
+      if (!isBulk) {
+        if (qtyInput) qtyInput.value = '1';
+        clearErr('jumlah_tiket');
+      }
+      syncPricing();
+    }
+
+    function syncPricing() {
+      var kategori = kategoriEl ? kategoriEl.value : '';
+      if (!kategori) {
+        currentTotal = 0;
+        if (totalEl) totalEl.textContent = 'Rp 0';
+        if (priceDetail) priceDetail.textContent = 'Pilih kategori untuk melihat harga.';
+        if (quotaDetail) quotaDetail.textContent = '';
+        return;
+      }
+      var qty = kategori === 'MQ Aaminah' ? 1 : quantity();
+      var earlyAvailable = Math.max(0, Number(info.earlyBirdRemaining) || 0);
+      var regularAvailable = Math.max(0, Number(info.regularRemaining) || 0);
+      var earlyQty = Math.min(qty, earlyAvailable);
+      var regularQty = qty - earlyQty;
+      var total = earlyQty * info.earlyBirdPrice + regularQty * info.regularPrice;
+      var discount = 0;
+      if (kategori === 'MQ Aaminah' && codeState.checked && codeState.valid && earlyQty > 0) {
+        discount = codeState.discount || 25000;
+        total -= discount;
+      }
+      currentTotal = Math.max(0, total);
+      if (totalEl) totalEl.textContent = formatRp(currentTotal);
+      var bits = [];
+      if (earlyQty > 0) bits.push('Early bird ' + earlyQty + ' × ' + formatRp(info.earlyBirdPrice));
+      if (regularQty > 0) bits.push('Regular ' + regularQty + ' × ' + formatRp(info.regularPrice));
+      if (discount > 0) bits.push('Potongan kode −' + formatRp(discount));
+      if (priceDetail) priceDetail.textContent = bits.length ? bits.join(' · ') : 'Harga belum tersedia.';
+      var qbits = [];
+      qbits.push('Sisa kuota early bird: ' + earlyAvailable + ' tiket');
+      qbits.push('regular: ' + regularAvailable + ' tiket');
+      if (regularQty > regularAvailable) qbits.push('Kuota tidak mencukupi untuk jumlah ini.');
+      if (quotaDetail) quotaDetail.textContent = qbits.join(' · ');
+    }
+
+    async function fetchInfo() {
+      try {
+        var res = await fetch('/api/registration-info', { cache: 'no-store' });
+        var body = await res.json();
+        if (res.ok && body.ok && body.info) info = body.info;
+      } catch (err) {
+        // Defaults keep the form usable if the info endpoint is temporarily unavailable.
+      }
+      if (info.closed) {
+        setStatus(formStatus, 'Pendaftaran sudah ditutup.', 'error');
+        if (submitBtn) submitBtn.disabled = true;
+      }
+      syncPricing();
+    }
+
+    async function checkCode() {
+      var code = codeInput ? codeInput.value.trim() : '';
+      if (!code) {
+        codeState = { checked: true, valid: false, discount: 0 };
+        if (codeHint) codeHint.textContent = 'Kode hanya berlaku untuk MQ Aaminah selama kuota early bird tersedia.';
+        clearErr('kode_diskon');
+        syncPricing();
+        return false;
+      }
+      if (codeHint) codeHint.textContent = 'Memeriksa kode…';
+      try {
+        var res = await fetch('/api/check-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: code })
+        });
+        var body = await res.json().catch(function () { return {}; });
+        if (!res.ok || !body.ok) throw new Error(body.error || 'Gagal memeriksa kode.');
+        codeState = { checked: true, valid: !!body.valid, discount: Number(body.discount) || 0 };
+        if (body.valid) {
+          if (codeHint) codeHint.textContent = 'Kode valid · potongan ' + formatRp(codeState.discount) + ' · sisa ' + body.remaining + ' penggunaan.';
+          clearErr('kode_diskon');
+        } else {
+          if (codeHint) codeHint.textContent = 'Kode tidak valid atau kuota kode sudah habis.';
+          setErr('kode_diskon', 'Kode diskon tidak valid atau sudah habis.');
+        }
+      } catch (err) {
+        codeState = { checked: true, valid: false, discount: 0 };
+        if (codeHint) codeHint.textContent = 'Gagal memeriksa kode. Coba lagi.';
+        setErr('kode_diskon', err.message || 'Gagal memeriksa kode.');
+      }
+      syncPricing();
+      return codeState.valid;
+    }
+
+    function validate() {
+      var ok = true;
+      if (val('nama').length < 2) { setErr('nama', 'Nama lengkap wajib diisi.'); ok = false; }
+      var phone = normalizePhone(val('whatsapp'));
+      if (!/^[0-9]{9,15}$/.test(phone)) { setErr('whatsapp', 'Nomor WhatsApp tidak valid.'); ok = false; }
+      var kategori = val('kategori');
+      if (!kategori) {
+        setErr('kategori', 'Pilih kategori peserta.'); ok = false;
+      } else if (kategori === 'MQ Aaminah' && !val('aminah_ke')) {
+        setErr('aminah_ke', 'Aaminah wajib diisi.'); ok = false;
+      }
+      if (kategori === 'Selain MQ Aaminah_DIK') {
+        var q = quantity();
+        if (q < 1 || q > 5) { setErr('jumlah_tiket', 'Jumlah tiket harus 1 sampai 5.'); ok = false; }
+      }
+      var file = buktiInput && buktiInput.files && buktiInput.files[0];
+      if (!file) { setErr('bukti_transfer', 'Bukti transfer wajib diunggah.'); ok = false; }
+      if (kategori === 'MQ Aaminah' && codeInput && codeInput.value.trim() && !codeState.valid) {
+        setErr('kode_diskon', 'Kode diskon belum valid. Periksa kembali atau kosongkan.'); ok = false;
+      }
+      return ok;
     }
 
     if (kategoriEl) {
-      kategoriEl.addEventListener('change', function () {
-        toggleAminah();
-        syncNominal();
+      kategoriEl.addEventListener('change', syncVisibility);
+    }
+    if (qtyInput) {
+      qtyInput.addEventListener('input', syncPricing);
+      qtyInput.addEventListener('change', syncPricing);
+    }
+    if (codeInput) {
+      codeInput.addEventListener('blur', checkCode);
+      codeInput.addEventListener('input', function () {
+        codeState = { checked: false, valid: false, discount: 0 };
+        clearErr('kode_diskon');
+        syncPricing();
       });
-      toggleAminah();
-      syncNominal();
     }
 
     $$('input, select', form).forEach(function (el) {
@@ -384,7 +325,6 @@
       el.addEventListener('change', function () { clearErr(el.id); });
     });
 
-    var buktiInput = document.getElementById('bukti_transfer');
     if (buktiInput) {
       buktiInput.addEventListener('change', function () {
         var file = buktiInput.files && buktiInput.files[0];
@@ -401,24 +341,33 @@
       event.preventDefault();
       clearAll();
       setStatus(formStatus, '', '');
-      syncNominal();
 
+      if (info.closed) {
+        setStatus(formStatus, 'Pendaftaran sudah ditutup.', 'error');
+        return;
+      }
+
+      if (kategoriEl && kategoriEl.value === 'MQ Aaminah' && codeInput && codeInput.value.trim() && !codeState.checked) {
+        await checkCode();
+      }
       if (!validate()) {
         var first = $('.err.show', form);
         if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
-      var fileInput = document.getElementById('bukti_transfer');
-      var file = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0] : null;
+      var kategori = val('kategori');
+      var qty = kategori === 'MQ Aaminah' ? 1 : quantity();
+      var file = buktiInput && buktiInput.files && buktiInput.files[0] ? buktiInput.files[0] : null;
       var data = {
         type: 'peserta',
         nama: val('nama'),
         whatsapp: normalizePhone(val('whatsapp')),
-        kategori: val('kategori'),
+        kategori: kategori,
         aminah: val('aminah_ke'),
-        email: val('email'),
-        nominal_transfer: val('nominal_transfer'),
+        quantity: qty,
+        code: kategori === 'MQ Aaminah' ? val('kode_diskon') : '',
+        expected_total: currentTotal,
         attachment_path: '',
         attachment_name: ''
       };
@@ -428,34 +377,35 @@
       submitBtn.textContent = 'Menyimpan pendaftaran...';
 
       try {
-        if (file) {
-          setStatus(formStatus, 'Mengunggah bukti transfer...', 'info');
-          var attachment = await uploadAttachment(file, 'peserta');
-          data.attachment_path = attachment.path;
-          data.attachment_name = attachment.name;
-        }
+        setStatus(formStatus, 'Mengunggah bukti transfer...', 'info');
+        var attachment = await uploadAttachment(file, 'peserta');
+        data.attachment_path = attachment.path;
+        data.attachment_name = attachment.name;
         setStatus(formStatus, 'Menyimpan data pendaftaran...', 'info');
         var result = await postRegistration(data);
-        if (!result.ticketNo) throw new Error('Nomor tiket tidak diterima dari server.');
-        var ticketNo = String(result.ticketNo).padStart(3, '0');
-        var dataURL = await makeTicket(data, ticketNo);
+        if (!result.orderNo) throw new Error('Nomor order tidak diterima dari server.');
 
-        ticketImg.src = dataURL;
-        downloadBtn.href = dataURL;
-        downloadBtn.setAttribute('download', 'Tiket-MuslimahPreneur-' + ticketNo + '.png');
+        if (successOrderNo) successOrderNo.textContent = result.orderNo;
         setStatus(formStatus, '', '');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
-        showThanks(thanksOverlay, function () {
-          if (daftarIntro) daftarIntro.hidden = true;
-          form.hidden = true;
-          ticketZone.hidden = false;
-          ticketZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        if (daftarIntro) daftarIntro.hidden = true;
+        form.hidden = true;
+        if (successPanel) {
+          successPanel.hidden = false;
+          successPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       } catch (err) {
         console.error(err);
+        if (err.pricing) {
+          if (typeof err.pricing.earlyBirdRemaining === 'number') info.earlyBirdRemaining = err.pricing.earlyBirdRemaining;
+          if (typeof err.pricing.regularRemaining === 'number') info.regularRemaining = err.pricing.regularRemaining;
+          syncPricing();
+        }
         var msg = err && err.message ? err.message : 'Pendaftaran gagal disimpan. Silakan coba lagi.';
         if (/fetch|network/i.test(msg)) msg = 'Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.';
+        if (err.pricing) msg += ' Silakan unggah ulang bukti transfer dengan nominal terbaru.';
+        if (buktiInput) buktiInput.value = '';
         setStatus(formStatus, msg, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = original;
@@ -466,31 +416,21 @@
       resetBtn.addEventListener('click', function () {
         form.reset();
         clearAll();
-        toggleAminah();
-        syncNominal();
-        setStatus(formStatus, '', '');
-        if (thanksOverlay) { thanksOverlay.hidden = true; thanksOverlay.classList.remove('show'); }
-        ticketImg.removeAttribute('src');
-        ticketZone.hidden = true;
+        codeState = { checked: false, valid: false, discount: 0 };
+        if (successPanel) successPanel.hidden = true;
         form.hidden = false;
-        submitBtn.disabled = false;
         if (daftarIntro) daftarIntro.hidden = false;
+        setStatus(formStatus, '', '');
+        submitBtn.disabled = false;
+        syncVisibility();
+        fetchInfo();
         var section = document.getElementById('registrasi');
         if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
-  }
 
-  function initCopyRek() {
-    var btn = document.getElementById('copyRek');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText('2137416261').then(function () {
-        btn.textContent = '✓ Disalin!';
-        setTimeout(function () { btn.textContent = 'Salin Nomor'; }, 2000);
-      });
-    });
+    syncVisibility();
+    fetchInfo();
   }
 
   function boot() {

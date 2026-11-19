@@ -222,3 +222,47 @@ tbody td:first-child{font-weight:600;color:var(--maroon);white-space:nowrap}
   transition:background .2s,border-color .2s;
 }
 .delete-btn:hover{background:rgba(178,59,46,.08);border-color:var(--danger)}
+
+.summary-card small{
+  display:block;margin-top:6px;font-size:.7rem;line-height:1.5;color:var(--muted);
+}
+.summary-code b{font-size:clamp(1.1rem,2.4vw,1.45rem);letter-spacing:.05em}
+.btn-copy-code{
+  margin-top:10px;font-size:.64rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--maroon);
+  border:1px solid var(--cream-3);border-radius:999px;padding:5px 10px;
+  background:var(--white);transition:background .2s,border-color .2s;
+}
+.btn-copy-code:hover{background:var(--cream);border-color:var(--wood-dark)}
+
+.status-badge{
+  display:inline-flex;align-items:center;
+  font-size:.62rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;border-radius:999px;padding:3px 9px;
+  white-space:nowrap;
+}
+.status-pending{background:rgba(216,190,157,.35);color:#6E4639;border:1px solid rgba(110,70,57,.25)}
+.status-verified{background:rgba(86,88,44,.13);color:var(--olive);border:1px solid rgba(86,88,44,.28)}
+.status-rejected{background:rgba(178,59,46,.1);color:var(--danger);border:1px solid rgba(178,59,46,.28)}
+
+.ticket-pills{display:flex;flex-wrap:wrap;gap:4px}
+.ticket-pill{
+  display:inline-block;font-size:.66rem;font-weight:600;
+  color:var(--maroon);background:var(--cream);
+  border:1px solid var(--cream-3);border-radius:999px;padding:2px 7px;
+}
+.action-group{display:flex;flex-wrap:wrap;gap:5px;min-width:190px}
+.action-btn{
+  font-size:.64rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:999px;padding:5px 9px;border:1px solid var(--cream-3);
+  transition:background .2s,border-color .2s,opacity .2s;
+}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+.verify-btn{color:var(--olive);border-color:rgba(86,88,44,.3)}
+.verify-btn:not(:disabled):hover{background:rgba(86,88,44,.1);border-color:var(--olive)}
+.reject-btn{color:var(--danger);border-color:rgba(178,59,46,.3)}
+.reject-btn:not(:disabled):hover{background:rgba(178,59,46,.08);border-color:var(--danger)}
+.wa-btn{color:#1d7a45;border-color:rgba(29,122,69,.3)}
+.wa-btn:hover{background:rgba(29,122,69,.08);border-color:#1d7a45}
+.attachment-btn.viewed{background:rgba(86,88,44,.1);border-color:rgba(86,88,44,.3)}
+table{min-width:1120px}

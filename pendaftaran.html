@@ -15,8 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"></noscript>
 
-<link rel="stylesheet" href="css/main.css?v=20261122">
-<link rel="stylesheet" href="css/form.css?v=20261117">
+<link rel="stylesheet" href="css/main.css?v=20261123">
+<link rel="stylesheet" href="css/form.css?v=20261123">
 </head>
 <body class="form-page">
 
@@ -66,7 +66,7 @@
       <div class="card-body">
         <div class="tier-picker" role="radiogroup" aria-label="Pilih paket sponsorship">
           <label class="tier-opt" id="opt-plat" tabindex="0">
-            <input type="radio" name="paket" value="Platinum – IDR 5.000.000 (Free 3 Tiket)" required>
+            <input type="radio" name="paket" value="Platinum" required>
             <div class="tier-opt-main">
               <span class="tier-opt-badge badge-plat">Platinum</span>
               <p class="tier-opt-name">Platinum</p>
@@ -75,13 +75,13 @@
             </div>
             <ul class="tier-opt-benefits">
               <li>Logo perusahaan tampil dominan di Main Banner/Backdrop, Spanduk, E-Flyer</li>
-              <li>Hak memasang X-Banner/Booth Promosi di dalam ruangan kegiatan</li>
+              <li>Hak memasang X-Banner/Booth Promosi</li>
               <li>Ad-Libs disebut nama produk/perusahaan oleh MC</li>
               <li>Hak menyisipkan brosur/voucher promo produk ke dalam Goodie Bag peserta</li>
             </ul>
           </label>
           <label class="tier-opt" id="opt-gold" tabindex="0">
-            <input type="radio" name="paket" value="Gold – IDR 3.000.000 (Free 2 Tiket)">
+            <input type="radio" name="paket" value="Gold">
             <div class="tier-opt-main">
               <span class="tier-opt-badge badge-gold">Gold</span>
               <p class="tier-opt-name">Gold</p>
@@ -96,7 +96,7 @@
             </ul>
           </label>
           <label class="tier-opt" id="opt-silv" tabindex="0">
-            <input type="radio" name="paket" value="Silver – IDR 2.500.000 (Free 1 Tiket)">
+            <input type="radio" name="paket" value="Silver">
             <div class="tier-opt-main">
               <span class="tier-opt-badge badge-silv">Silver</span>
               <p class="tier-opt-name">Silver</p>
@@ -107,6 +107,18 @@
               <li>Logo perusahaan tampil di Main Banner/Backdrop, Spanduk, E-Flyer</li>
               <li>Hak memasang X-Banner</li>
               <li>Ad-Libs disebut nama produk/perusahaan oleh MC</li>
+            </ul>
+          </label>
+          <label class="tier-opt" id="opt-regu" tabindex="0">
+            <input type="radio" name="paket" value="Reguler">
+            <div class="tier-opt-main">
+              <span class="tier-opt-badge badge-regu">Reguler</span>
+              <p class="tier-opt-name">Reguler</p>
+              <p class="tier-opt-price">IDR 500.000</p>
+              <p class="tier-opt-ticket">Tanpa free tiket</p>
+            </div>
+            <ul class="tier-opt-benefits">
+              <li>Logo perusahaan tampil di Main Banner/Backdrop, Spanduk, E-Flyer</li>
             </ul>
           </label>
         </div>
@@ -202,7 +214,7 @@
           </div>
         </div>
         <span class="field-error" id="bukti_transfer-error" role="alert"></span>
-        <p class="field-hint">Opsional — unggah bukti transfer agar dapat dilihat admin di dashboard.</p>
+        <p class="field-hint">Wajib — unggah bukti transfer agar dapat diverifikasi admin.</p>
 
         <div class="field">
           <label for="nama_transfer">Nama Pengirim Transfer <span aria-hidden="true">*</span></label>
@@ -237,14 +249,8 @@
     <h2 class="success-title">Jazakumullahu Khairan!</h2>
     <p class="success-text">
       Pendaftaran sponsorship Anda telah kami terima.<br>
-      Invoice berhasil dibuat. Unduh invoice di bawah ini sebagai bukti pendaftaran.
+      Pembayaran sedang menunggu verifikasi admin. Invoice akan dikirim melalui WhatsApp setelah pembayaran diverifikasi.
     </p>
-    <div class="invoice-preview">
-      <img id="invoiceImg" alt="Invoice sponsorship Muslimah Preneur">
-    </div>
-    <div class="invoice-actions">
-      <a id="invoiceDownload" class="btn-invoice" download>⤓ Download Invoice</a>
-    </div>
     <p class="success-text">
       <em>Baarakallahu fiikum — semoga Allah mudahkan setiap langkah kebaikan kita.</em>
     </p>
@@ -268,12 +274,12 @@
     <div class="thanks-icon" aria-hidden="true">✓</div>
     <p class="thanks-kicker">Pendaftaran Sponsor Berhasil</p>
     <h2 class="thanks-title">Terima kasih sudah menjadi sponsor!</h2>
-    <p class="thanks-sub">Invoice Anda sedang disiapkan…</p>
+    <p class="thanks-sub">Pembayaran Anda sedang menunggu verifikasi admin.</p>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-<script src="js/form.js?v=20261118" defer></script>
+<script src="js/form.js?v=20261123" defer></script>
 </body>
 </html>

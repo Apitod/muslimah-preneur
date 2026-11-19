@@ -378,3 +378,5 @@ body.form-page{min-height:100vh;background:var(--cream);display:flex;flex-direct
   65%{transform:scale(1.08);opacity:1}
   100%{transform:scale(1);opacity:1}
 }
+
+.badge-regu{background:var(--cream-2);color:var(--maroon);border:1px solid var(--cream-3)}
