@@ -18,6 +18,15 @@
     if (!digits) return v;
     return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
+  function normalizePhone(v) {
+    var digits = String(v || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.indexOf('0062') === 0) digits = digits.slice(2);
+    if (digits.indexOf('620') === 0) digits = '62' + digits.slice(3);
+    if (digits.charAt(0) === '0') digits = '62' + digits.slice(1);
+    else if (digits.indexOf('62') !== 0 && digits.charAt(0) === '8') digits = '62' + digits;
+    return digits;
+  }
   function setError(id, msg) {
     var input = document.getElementById(id);
     var err   = document.getElementById(id + '-error');
@@ -236,6 +245,11 @@
     ].forEach(function (f) {
       if (!val(f.id)) { setError(f.id, f.msg); ok = false; }
     });
+    var phone = normalizePhone(val('no_wa'));
+    if (!/^62[0-9]{8,13}$/.test(phone)) {
+      setError('no_wa', 'Nomor WhatsApp tidak valid. Gunakan 08..., 62..., atau +62...');
+      ok = false;
+    }
     var fileInput = document.getElementById('bukti_transfer');
     var file = fileInput && fileInput.files && fileInput.files[0];
     if (!file) { setError('bukti_transfer', 'Bukti transfer wajib diunggah.'); ok = false; }
@@ -487,6 +501,14 @@
       amountInput.setAttribute('aria-readonly', 'true');
     }
     syncTransferAmount();
+
+    var waInput = document.getElementById('no_wa');
+    if (waInput) {
+      waInput.addEventListener('blur', function () {
+        var normalized = normalizePhone(waInput.value);
+        if (normalized && normalized.indexOf('62') === 0) waInput.value = '+' + normalized;
+      });
+    }
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();

@@ -5,6 +5,7 @@
   var el = {};
   var sb = null;
   var state = { orders: [], tickets: [], sponsors: [], code: null };
+  var proofContext = null;
   var money = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -40,9 +41,24 @@
   }
 
   function normalizePhone(value) {
-    var digits = String(value || '').replace(/[^\d]/g, '');
+    var digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.indexOf('0062') === 0) digits = digits.slice(2);
+    if (digits.indexOf('620') === 0) digits = '62' + digits.slice(3);
     if (digits.charAt(0) === '0') digits = '62' + digits.slice(1);
+    else if (digits.indexOf('62') !== 0 && digits.charAt(0) === '8') digits = '62' + digits;
     return digits;
+  }
+
+  function formatPhone(value) {
+    var n = normalizePhone(value);
+    if (!n) return '';
+    if (n.indexOf('62') === 0) {
+      var rest = n.slice(2);
+      if (rest.length > 8) return '+62 ' + rest.slice(0, 3) + '-' + rest.slice(3, 7) + '-' + rest.slice(7);
+      return '+62 ' + rest;
+    }
+    return '+' + n;
   }
 
   function cache() {
@@ -51,7 +67,8 @@
       'adminEmail', 'logoutBtn', 'statEarly', 'statEarlySub', 'statCode', 'statCodeSub',
       'statRegular', 'statRegularSub', 'statTotal', 'statTotalSub', 'copyCode',
       'countPeserta', 'countSponsor', 'pesertaBody', 'sponsorBody',
-      'pesertaEmpty', 'sponsorEmpty', 'searchInput', 'refreshBtn', 'dashStatus'
+      'pesertaEmpty', 'sponsorEmpty', 'searchInput', 'refreshBtn', 'printBtn', 'printSheet', 'dashStatus',
+      'proofModal', 'proofTitle', 'proofImage', 'proofFrame', 'proofOpenLink', 'closeProof', 'proofVerify'
     ].forEach(function (id) { el[id] = $(id); });
   }
 
@@ -190,7 +207,7 @@
       return '<tr>' +
         '<td>' + esc(row.order_no) + '</td>' +
         '<td>' + esc(row.name) + '</td>' +
-        '<td>' + esc(row.whatsapp) + '</td>' +
+        '<td>' + esc(formatPhone(row.whatsapp)) + '</td>' +
         '<td>' + esc(category) + '</td>' +
         '<td>' + esc(row.quantity) + '</td>' +
         '<td>' + fmtMoney(row.total_amount) + '</td>' +
@@ -217,7 +234,7 @@
         '<td>' + esc(invoice) + '</td>' +
         '<td>' + esc(row.company) + '</td>' +
         '<td>' + esc(row.pic_name) + '</td>' +
-        '<td>' + esc(row.whatsapp) + '</td>' +
+        '<td>' + esc(formatPhone(row.whatsapp)) + '</td>' +
         '<td>' + esc(row.package) + '</td>' +
         '<td>' + fmtMoney(row.amount) + '</td>' +
         '<td>' + attachmentCell(row, 'sponsor') + '</td>' +
@@ -303,7 +320,42 @@
       alert('Gagal membuka lampiran: ' + res.error.message);
       return;
     }
-    window.open(res.data.signedUrl, '_blank', 'noopener');
+    showProof(path, res.data.signedUrl, row && row.attachment_name, kind, id, row && row.status);
+  }
+
+  function showProof(path, url, name, kind, id, status) {
+    if (!el.proofModal) return;
+    proofContext = { kind: kind, id: id };
+    el.proofTitle.textContent = name || 'Bukti Transfer';
+    el.proofOpenLink.href = url;
+    if (el.proofVerify) {
+      el.proofVerify.hidden = status !== 'pending';
+      el.proofVerify.disabled = false;
+      el.proofVerify.textContent = 'Verifikasi';
+    }
+    var isPdf = /\.pdf($|\?)/i.test(path || '');
+    if (isPdf) {
+      el.proofImage.hidden = true;
+      el.proofImage.removeAttribute('src');
+      el.proofFrame.hidden = false;
+      el.proofFrame.src = url;
+    } else {
+      el.proofFrame.hidden = true;
+      el.proofFrame.removeAttribute('src');
+      el.proofImage.hidden = false;
+      el.proofImage.src = url;
+    }
+    el.proofModal.hidden = false;
+    document.body.classList.add('proof-open');
+  }
+
+  function closeProof() {
+    if (!el.proofModal) return;
+    el.proofModal.hidden = true;
+    document.body.classList.remove('proof-open');
+    if (el.proofFrame) el.proofFrame.removeAttribute('src');
+    if (el.proofImage) el.proofImage.removeAttribute('src');
+    proofContext = null;
   }
 
   async function verifyRow(type, id) {
@@ -313,13 +365,14 @@
     var res = await rpc;
     if (res.error) {
       alert('Gagal memverifikasi: ' + res.error.message);
-      return;
+      return false;
     }
     if (!res.data || res.data.ok !== true) {
       alert((res.data && res.data.error) || 'Gagal memverifikasi.');
-      return;
+      return false;
     }
     await loadData();
+    return true;
   }
 
   async function rejectRow(type, id) {
@@ -391,6 +444,55 @@
     await loadData();
   }
 
+  function printAttendance() {
+    if (!state.tickets.length) {
+      alert('Belum ada tiket terverifikasi untuk dicetak.');
+      return;
+    }
+    var ordersById = {};
+    state.orders.forEach(function (row) { ordersById[row.id] = row; });
+    var rows = state.tickets.slice().sort(function (a, b) {
+      return Number(a.ticket_no) - Number(b.ticket_no);
+    }).map(function (ticket) {
+      var order = ordersById[ticket.order_id] || {};
+      var category = (ticket.category || order.category || '') +
+        (ticket.aaminah ? ' · ' + ticket.aaminah : '');
+      return '<tr>' +
+        '<td class="ticket-no">' + esc(ticket.ticket_no) + '</td>' +
+        '<td>' + esc(ticket.name) + '</td>' +
+        '<td>' + esc(formatPhone(order.whatsapp)) + '</td>' +
+        '<td>' + esc(category) + '</td>' +
+        '<td class="attendance-cell"><span class="attendance-box" aria-label="Kolom hadir"></span></td>' +
+        '</tr>';
+    }).join('');
+
+    var printedAt = new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+    el.printSheet.innerHTML =
+      '<div class="print-head">' +
+        '<img src="assets/logo.webp" alt="MQ Aaminah">' +
+        '<div>' +
+          '<p class="print-kicker">Daftar Hadir Peserta</p>' +
+          '<h1>Muslimah Preneur</h1>' +
+          '<p>Jum\'at, 25 Desember 2026 · Max Ballroom Hotel Maxone Makassar</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="print-meta">' +
+        '<span>Total tiket terverifikasi: <strong>' + state.tickets.length + '</strong></span>' +
+        '<span>Dicetak: ' + esc(printedAt) + '</span>' +
+      '</div>' +
+      '<table class="print-table">' +
+        '<colgroup><col style="width:12%"><col style="width:30%"><col style="width:21%"><col style="width:23%"><col style="width:14%"></colgroup>' +
+        '<thead><tr><th>No. Tiket</th><th>Nama</th><th>Nomor WhatsApp</th><th>Kategori</th><th>Hadir</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+      '<p class="print-foot">Tanda centang pada kolom Hadir diisi panitia saat registrasi ulang.</p>';
+
+    var oldTitle = document.title;
+    document.title = 'Daftar Hadir Muslimah Preneur';
+    window.print();
+    setTimeout(function () { document.title = oldTitle; }, 800);
+  }
+
   function bind() {
     el.loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -418,6 +520,7 @@
     });
 
     el.refreshBtn.addEventListener('click', loadData);
+    el.printBtn.addEventListener('click', printAttendance);
     el.searchInput.addEventListener('input', render);
 
     el.copyCode.addEventListener('click', function () {
@@ -453,6 +556,30 @@
       if (del) {
         deleteRow(del.getAttribute('data-type'), del.getAttribute('data-id'), del.getAttribute('data-path'), del.getAttribute('data-name'));
       }
+    });
+
+    if (el.closeProof) el.closeProof.addEventListener('click', closeProof);
+    if (el.proofVerify) {
+      el.proofVerify.addEventListener('click', async function () {
+        if (!proofContext) return;
+        var ctx = proofContext;
+        el.proofVerify.disabled = true;
+        el.proofVerify.textContent = 'Memverifikasi...';
+        var ok = await verifyRow(ctx.kind, ctx.id);
+        if (ok) closeProof();
+        else if (el.proofVerify) {
+          el.proofVerify.disabled = false;
+          el.proofVerify.textContent = 'Verifikasi';
+        }
+      });
+    }
+    if (el.proofModal) {
+      el.proofModal.addEventListener('click', function (e) {
+        if (e.target.hasAttribute('data-close-proof')) closeProof();
+      });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.proofModal && !el.proofModal.hidden) closeProof();
     });
   }
 

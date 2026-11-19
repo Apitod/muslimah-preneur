@@ -599,22 +599,22 @@ ul,ol{list-style:none}
 
 /* ── PRICE SUMMARY ── */
 .price-summary{
-  border:1px solid rgba(235,214,183,.28);
-  background:rgba(235,214,183,.08);
+  border:1px solid var(--cream-3);
+  background:var(--cream);
   border-radius:4px;padding:16px 18px;
 }
 .price-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .price-label{
   font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--wood-dark);font-weight:600;
+  color:#1A1A1A;font-weight:600;
 }
 .price-value{
   font-family:var(--serif);font-weight:400;font-size:1.45rem;
-  color:var(--cream);line-height:1.2;
+  color:#1A1A1A;line-height:1.2;
 }
 .price-detail{
   margin-top:6px;font-size:.78rem;line-height:1.6;
-  color:rgba(239,237,227,.72);
+  color:#1A1A1A;
 }
 
 /* ── REGISTRATION SUCCESS ── */

@@ -17,7 +17,15 @@
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
-  function normalizePhone(v) { return v.replace(/[^\d]/g, ''); }
+  function normalizePhone(v) {
+    var digits = String(v || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.indexOf('0062') === 0) digits = digits.slice(2);
+    if (digits.indexOf('620') === 0) digits = '62' + digits.slice(3);
+    if (digits.charAt(0) === '0') digits = '62' + digits.slice(1);
+    else if (digits.indexOf('62') !== 0 && digits.charAt(0) === '8') digits = '62' + digits;
+    return digits;
+  }
   function formatRp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
 
   function getSupabase() {
@@ -179,7 +187,7 @@
     function syncVisibility() {
       var kategori = kategoriEl ? kategoriEl.value : '';
       var isAminah = kategori === 'MQ Aaminah';
-      var isBulk = kategori === 'Selain MQ Aaminah_DIK';
+      var isBulk = kategori === 'Selain MQ. Aaminah/DIK';
       if (aminahField) aminahField.hidden = !isAminah;
       if (codeField) codeField.hidden = !isAminah;
       if (qtyField) qtyField.hidden = !isBulk;
@@ -285,14 +293,14 @@
       var ok = true;
       if (val('nama').length < 2) { setErr('nama', 'Nama lengkap wajib diisi.'); ok = false; }
       var phone = normalizePhone(val('whatsapp'));
-      if (!/^[0-9]{9,15}$/.test(phone)) { setErr('whatsapp', 'Nomor WhatsApp tidak valid.'); ok = false; }
+      if (!/^62[0-9]{8,13}$/.test(phone)) { setErr('whatsapp', 'Nomor WhatsApp tidak valid. Gunakan 08..., 62..., atau +62...'); ok = false; }
       var kategori = val('kategori');
       if (!kategori) {
         setErr('kategori', 'Pilih kategori peserta.'); ok = false;
       } else if (kategori === 'MQ Aaminah' && !val('aminah_ke')) {
         setErr('aminah_ke', 'Aaminah wajib diisi.'); ok = false;
       }
-      if (kategori === 'Selain MQ Aaminah_DIK') {
+      if (kategori === 'Selain MQ. Aaminah/DIK') {
         var q = quantity();
         if (q < 1 || q > 5) { setErr('jumlah_tiket', 'Jumlah tiket harus 1 sampai 5.'); ok = false; }
       }
@@ -334,6 +342,14 @@
         } else {
           setStatus(formStatus, '', '');
         }
+      });
+    }
+
+    var waInput = document.getElementById('whatsapp');
+    if (waInput) {
+      waInput.addEventListener('blur', function () {
+        var normalized = normalizePhone(waInput.value);
+        if (normalized && normalized.indexOf('62') === 0) waInput.value = '+' + normalized;
       });
     }
 

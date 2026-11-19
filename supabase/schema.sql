@@ -159,7 +159,7 @@ create table if not exists participant_orders (
   order_no text not null unique,
   name text not null,
   whatsapp text not null,
-  category text not null check (category in ('MQ Aaminah', 'Selain MQ Aaminah_DIK')),
+  category text not null check (category in ('MQ Aaminah', 'Selain MQ. Aaminah/DIK')),
   aaminah text,
   quantity integer not null check (quantity between 1 and 5),
   early_bird_qty integer not null default 0 check (early_bird_qty >= 0),
@@ -313,7 +313,7 @@ declare
 begin
   if now() >= timestamptz '2026-12-25 10:00:00+08' then return jsonb_build_object('ok', false, 'error', 'Pendaftaran sudah ditutup.'); end if;
   if v_name = '' or v_whatsapp = '' then return jsonb_build_object('ok', false, 'error', 'Data peserta belum lengkap.'); end if;
-  if v_category not in ('MQ Aaminah', 'Selain MQ Aaminah_DIK') then return jsonb_build_object('ok', false, 'error', 'Kategori peserta tidak valid.'); end if;
+  if v_category not in ('MQ Aaminah', 'Selain MQ. Aaminah/DIK') then return jsonb_build_object('ok', false, 'error', 'Kategori peserta tidak valid.'); end if;
   if v_attachment_path = '' then return jsonb_build_object('ok', false, 'error', 'Bukti transfer wajib diunggah.'); end if;
   if v_category = 'MQ Aaminah' then
     if v_quantity <> 1 then return jsonb_build_object('ok', false, 'error', 'Kategori MQ Aaminah hanya 1 tiket per order.'); end if;
@@ -505,5 +505,5 @@ grant execute on function public.admin_verify_sponsor(uuid) to authenticated;
 grant execute on function public.admin_reject_sponsor(uuid) to authenticated;
 
 insert into discount_codes (code, quota_total, active)
-select 'MP-' || upper(substr(md5(random()::text), 1, 6)), 150, true
+select '#temanngajimu', 150, true
 where not exists (select 1 from discount_codes where active = true);

@@ -31,6 +31,20 @@ function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function normalizeWhatsApp(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.indexOf('0062') === 0) digits = digits.slice(2);
+  if (digits.indexOf('620') === 0) digits = '62' + digits.slice(3);
+  if (digits.charAt(0) === '0') digits = '62' + digits.slice(1);
+  else if (digits.indexOf('62') !== 0 && digits.charAt(0) === '8') digits = '62' + digits;
+  return digits;
+}
+
+function validWhatsApp(value) {
+  return /^62[0-9]{8,13}$/.test(value);
+}
+
 function validAttachment(path, type) {
   if (!path) return true;
   return new RegExp('^' + type + '/[a-z0-9-]+\\.[a-z0-9]+$', 'i').test(path);
@@ -74,7 +88,7 @@ module.exports = async function handler(req, res) {
 
   if (type === 'peserta') {
     const nama = clean(body.nama);
-    const whatsapp = clean(body.whatsapp, 30).replace(/[^\d+]/g, '');
+    const whatsapp = normalizeWhatsApp(clean(body.whatsapp, 30));
     const kategori = clean(body.kategori, 100);
     const aaminah = clean(body.aminah, 100);
     const quantity = Number(body.quantity || 1);
@@ -86,7 +100,10 @@ module.exports = async function handler(req, res) {
     if (!nama || !whatsapp || !kategori) {
       return send(res, 400, { ok: false, error: 'Data peserta belum lengkap.' });
     }
-    if (!['MQ Aaminah', 'Selain MQ Aaminah_DIK'].includes(kategori)) {
+    if (!validWhatsApp(whatsapp)) {
+      return send(res, 400, { ok: false, error: 'Nomor WhatsApp tidak valid. Gunakan 08..., 62..., atau +62...' });
+    }
+    if (!['MQ Aaminah', 'Selain MQ. Aaminah/DIK'].includes(kategori)) {
       return send(res, 400, { ok: false, error: 'Kategori peserta tidak valid.' });
     }
     if (kategori === 'MQ Aaminah' && !aaminah) {
@@ -147,7 +164,7 @@ module.exports = async function handler(req, res) {
     const address = clean(body.alamat);
     const picName = clean(body.nama_pic, 200);
     const position = clean(body.jabatan, 100);
-    const whatsapp = clean(body.no_wa, 30).replace(/[^\d+]/g, '');
+    const whatsapp = normalizeWhatsApp(clean(body.no_wa, 30));
     const email = clean(body.email, 200);
     const transferName = clean(body.nama_transfer, 200);
     const amount = toAmount(body.jumlah_transfer);
@@ -156,6 +173,9 @@ module.exports = async function handler(req, res) {
 
     if (!pkg || !company || !businessField || !picName || !whatsapp || !transferName) {
       return send(res, 400, { ok: false, error: 'Data sponsor belum lengkap.' });
+    }
+    if (!validWhatsApp(whatsapp)) {
+      return send(res, 400, { ok: false, error: 'Nomor WhatsApp tidak valid. Gunakan 08..., 62..., atau +62...' });
     }
     if (email && !isEmail(email)) {
       return send(res, 400, { ok: false, error: 'Format email tidak valid.' });
