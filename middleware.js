@@ -1,4 +1,4 @@
-const MAINTENANCE = true;
+const MAINTENANCE = false;
 
 const maintenanceHtml = `<!DOCTYPE html>
 <html lang="id">
